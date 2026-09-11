@@ -243,33 +243,7 @@ Open **`http://localhost:5173/`** in your browser.
 | `POST` | `/api/files/upload-resume` | Candidate | Upload PDF resume |
 | `GET` | `/api/files/resume/{fileName}` | Authorized | Stream/download candidate PDF resume |
 
----
 
-## 🎯 Interview Talking Points (Resume Defense)
-
-When explaining this project in an interview:
-
-1. **How does JWT Authentication work in your Spring Boot backend?**
-   > *"When a user logs in, credentials are verified via Spring Security's `AuthenticationManager` and `DaoAuthenticationProvider` using `BCryptPasswordEncoder`. On success, `JwtService` signs a compact JSON Web Token containing claims like user ID, email, and role. On subsequent requests, `JwtAuthenticationFilter` intercepts the request, validates token signature and expiration, loads `UserDetails`, and sets the `SecurityContextHolder`."*
-
-2. **How did you prevent duplicate job applications in the database?**
-   > *"We enforced both database-level and application-level integrity. At the database level, `applications` has a composite unique constraint `UNIQUE (job_id, candidate_id)`. At the service layer, `applicationRepository.existsByJobIdAndCandidateId(...)` checks and throws a custom `DuplicateResourceException` with HTTP 409 Conflict."*
-
-3. **How is the Recruitment Workflow tracked?**
-   > *"We modeled an application status lifecycle with stages `APPLIED`, `UNDER_REVIEW`, `SHORTLISTED`, `INTERVIEW`, `SELECTED`, and `REJECTED`. Every transition creates an immutable `ApplicationStatusHistory` entry storing previous status, new status, actor ID, notes, and timestamp. The frontend renders a step-by-step visual tracker reflecting this history."*
-
-4. **How are files securely handled?**
-   > *"Uploaded PDF resumes are validated for file size and MIME/extension, hashed with UUIDs to prevent directory traversal or collision, and stored in a designated uploads directory. The `/api/files/resume/{filename}` endpoint enforces access control so only the candidate owner, hiring recruiter, or admin can stream the document."*
-
----
-
-## 🔮 Future Enhancements
-- WebSocket-based real-time interview invitation notifications.
-- Automated email triggers (e.g., via SendGrid or JavaMailSender).
-- AI-assisted candidate resume parsing and keyword matching score.
-- Video interview integration via WebRTC.
-
----
 
 ## 📄 License
 This project is open-source and available under the [MIT License](LICENSE).
