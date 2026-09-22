@@ -9,7 +9,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, logout, isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,9 +17,20 @@ const LoginPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('expired') === 'true') {
+      logout();
       showToast('Your session has expired. Please log in again.', 'error');
+      // Clean up the URL to prevent repeating the toast on refresh
+      navigate('/login', { replace: true });
+    } else if (isAuthenticated && user) {
+      if (user.role === 'ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (user.role === 'RECRUITER') {
+        navigate('/recruiter/dashboard', { replace: true });
+      } else {
+        navigate('/candidate/dashboard', { replace: true });
+      }
     }
-  }, [location.search, showToast]);
+  }, [location.search, isAuthenticated, user, navigate, logout, showToast]);
 
   const from = location.state?.from?.pathname || null;
 
