@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Briefcase, Lock, Mail, ArrowRight, UserCheck, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,13 @@ const LoginPage = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === 'true') {
+      showToast('Your session has expired. Please log in again.', 'error');
+    }
+  }, [location.search, showToast]);
 
   const from = location.state?.from?.pathname || null;
 
