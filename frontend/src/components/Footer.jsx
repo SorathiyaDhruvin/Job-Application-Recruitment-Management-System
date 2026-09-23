@@ -16,10 +16,10 @@ const Footer = () => {
         {/* Brand info */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#ffffff', fontFamily: 'Plus Jakarta Sans', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1rem' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Briefcase size={18} color="#ffffff" />
             </div>
-            RecruitPro
+            Recruit<span style={{ color: 'var(--gold)' }}>Pro</span>
           </div>
           <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: '#94A3B8', marginBottom: '1.25rem' }}>
             Enterprise recruitment and talent acquisition management platform. Empowering ambitious software candidates and forward-thinking engineering recruiters.

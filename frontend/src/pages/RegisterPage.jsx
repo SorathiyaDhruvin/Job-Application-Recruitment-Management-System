@@ -64,23 +64,17 @@ const RegisterPage = () => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2.5rem 1.5rem',
-      background: 'radial-gradient(circle at top, rgba(79, 70, 229, 0.08), transparent 60%)'
+      background: 'radial-gradient(ellipse at top, rgba(26, 53, 87, 0.06), transparent 60%)'
     }}>
       <div style={{ maxWidth: 520, width: '100%' }}>
         
         {/* Brand header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: 'linear-gradient(135deg, #4F46E5 0%, #0EA5E9 100%)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            marginBottom: '0.75rem',
-            boxShadow: '0 4px 14px var(--primary-glow)'
+            width: 48, height: 48, borderRadius: 12,
+            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            color: '#FFFFFF', marginBottom: '0.75rem', boxShadow: '0 4px 14px var(--primary-glow)'
           }}>
             <Briefcase size={24} />
           </div>
@@ -108,7 +102,7 @@ const RegisterPage = () => {
               fontSize: '0.9rem',
               cursor: 'pointer',
               background: role === 'CANDIDATE' ? '#FFFFFF' : 'transparent',
-              color: role === 'CANDIDATE' ? '#4F46E5' : '#64748B',
+              color: role === 'CANDIDATE' ? 'var(--primary)' : 'var(--text-muted)',
               boxShadow: role === 'CANDIDATE' ? 'var(--shadow-sm)' : 'none',
               transition: 'all 0.15s ease'
             }}
@@ -126,7 +120,7 @@ const RegisterPage = () => {
               fontSize: '0.9rem',
               cursor: 'pointer',
               background: role === 'RECRUITER' ? '#FFFFFF' : 'transparent',
-              color: role === 'RECRUITER' ? '#4F46E5' : '#64748B',
+              color: role === 'RECRUITER' ? 'var(--primary)' : 'var(--text-muted)',
               boxShadow: role === 'RECRUITER' ? 'var(--shadow-sm)' : 'none',
               transition: 'all 0.15s ease'
             }}

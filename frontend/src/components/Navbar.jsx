@@ -36,19 +36,14 @@ const Navbar = () => {
       {/* Brand Logo */}
       <Link to="/" className="nav-brand" onClick={() => setMobileMenuOpen(false)}>
         <div style={{
-          width: 38,
-          height: 38,
-          borderRadius: 10,
-          background: 'linear-gradient(135deg, #4F46E5 0%, #0EA5E9 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#ffffff',
-          boxShadow: '0 4px 10px rgba(79, 70, 229, 0.3)'
+          width: 38, height: 38, borderRadius: 10,
+          background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#ffffff', boxShadow: '0 4px 10px var(--primary-glow)'
         }}>
           <Briefcase size={20} />
         </div>
-        <span>Recruit<span style={{ color: '#0EA5E9' }}>Pro</span></span>
+        <span>Recruit<span style={{ color: 'var(--gold)' }}>Pro</span></span>
       </Link>
 
       {/* Center Nav Links */}
@@ -113,16 +108,10 @@ const Navbar = () => {
               style={{ padding: '0.4rem 0.8rem', gap: '0.6rem', borderRadius: 'var(--radius-full)' }}
             >
               <div style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: 'var(--primary-light)',
-                color: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '0.85rem'
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'var(--primary-light)', color: 'var(--primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: '0.85rem'
               }}>
                 {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
               </div>
@@ -240,7 +229,7 @@ const Navbar = () => {
             <Link to="/login" className="btn btn-ghost btn-sm">
               Sign In
             </Link>
-            <Link to="/register" className="btn btn-primary btn-sm">
+            <Link to="/register" className="btn btn-gold btn-sm">
               Get Started
             </Link>
           </div>

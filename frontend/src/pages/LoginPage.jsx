@@ -76,23 +76,17 @@ const LoginPage = () => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2.5rem 1.5rem',
-      background: 'radial-gradient(circle at top, rgba(79, 70, 229, 0.08), transparent 60%)'
+      background: 'radial-gradient(ellipse at top, rgba(26, 53, 87, 0.06), transparent 60%)'
     }}>
       <div style={{ maxWidth: 460, width: '100%' }}>
         
         {/* Brand header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: 'linear-gradient(135deg, #4F46E5 0%, #0EA5E9 100%)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            marginBottom: '1rem',
-            boxShadow: '0 4px 14px var(--primary-glow)'
+            width: 48, height: 48, borderRadius: 12,
+            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            color: '#FFFFFF', marginBottom: '1rem', boxShadow: '0 4px 14px var(--primary-glow)'
           }}>
             <Briefcase size={24} />
           </div>
@@ -109,7 +103,7 @@ const LoginPage = () => {
           marginBottom: '1.5rem',
           boxShadow: 'var(--shadow-sm)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', fontWeight: 700, color: '#4F46E5', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem' }}>
             <Sparkles size={16} /> Quick Demo Account Sign-In
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
