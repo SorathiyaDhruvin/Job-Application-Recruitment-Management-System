@@ -24,9 +24,9 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     long countByRecruiterIdAndStatus(Long recruiterId, JobStatus status);
 
-    @Query("SELECT j FROM Job j WHERE " +
+    @Query("SELECT DISTINCT j FROM Job j LEFT JOIN j.company c LEFT JOIN j.recruiter r WHERE " +
            "(:status IS NULL OR j.status = :status) AND " +
-           "(:keyword IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(j.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(j.company.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(j.skills) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:keyword IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(j.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR (c.name IS NOT NULL AND LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR (j.skills IS NOT NULL AND LOWER(j.skills) LIKE LOWER(CONCAT('%', :keyword, '%')))) AND " +
            "(:location IS NULL OR LOWER(j.location) LIKE LOWER(CONCAT('%', :location, '%'))) AND " +
            "(:jobType IS NULL OR j.jobType = :jobType) AND " +
            "(:experienceLevel IS NULL OR j.experienceLevel = :experienceLevel) " +
