@@ -36,13 +36,19 @@ CREATE TABLE IF NOT EXISTS candidate_profiles (
     headline VARCHAR(255),
     bio TEXT,
     skills TEXT,
+    soft_skills TEXT,
     education TEXT,
+    cgpa NUMERIC(4, 2),
+    graduation_year INT,
     experience_years INT DEFAULT 0,
+    work_experience_details TEXT,
+    internships TEXT,
     github_url VARCHAR(500),
     linkedin_url VARCHAR(500),
     portfolio_url VARCHAR(500),
     resume_file_name VARCHAR(255),
     resume_original_name VARCHAR(255),
+    profile_completion_percentage INT DEFAULT 0,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -110,6 +116,17 @@ CREATE TABLE IF NOT EXISTS saved_jobs (
     job_id BIGINT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
     saved_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_saved_job_candidate UNIQUE (candidate_id, job_id)
+);
+
+-- 9. Candidate Projects Table
+CREATE TABLE IF NOT EXISTS candidate_projects (
+    id BIGSERIAL PRIMARY KEY,
+    candidate_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    project_url VARCHAR(500),
+    github_url VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for Optimal Query Performance

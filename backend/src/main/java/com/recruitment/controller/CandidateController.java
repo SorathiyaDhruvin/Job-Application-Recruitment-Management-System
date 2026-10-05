@@ -57,4 +57,16 @@ public class CandidateController {
         List<JobResponse> savedJobs = candidateService.getSavedJobs();
         return ResponseEntity.ok(ApiResponse.ok("Saved jobs retrieved", savedJobs));
     }
+
+    @PostMapping("/projects")
+    public ResponseEntity<ApiResponse<com.recruitment.dto.CandidateProjectDto>> addProject(@RequestBody com.recruitment.dto.CandidateProjectDto dto) {
+        com.recruitment.dto.CandidateProjectDto savedProject = candidateService.addProject(dto);
+        return ResponseEntity.ok(ApiResponse.ok("Project added successfully", savedProject));
+    }
+
+    @DeleteMapping("/projects/{projectId}")
+    public ResponseEntity<ApiResponse<Void>> deleteProject(@PathVariable Long projectId) {
+        candidateService.deleteProject(projectId);
+        return ResponseEntity.ok(ApiResponse.ok("Project deleted successfully"));
+    }
 }

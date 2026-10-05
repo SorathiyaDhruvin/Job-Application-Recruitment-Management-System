@@ -35,6 +35,24 @@ public class CandidateProfile {
     @Column(columnDefinition = "TEXT")
     private String education;
 
+    @Column(name = "soft_skills", columnDefinition = "TEXT")
+    private String softSkills;
+
+    @Column(name = "cgpa")
+    private Double cgpa;
+
+    @Column(name = "graduation_year")
+    private Integer graduationYear;
+
+    @Column(name = "work_experience_details", columnDefinition = "TEXT")
+    private String workExperienceDetails;
+
+    @Column(name = "internships", columnDefinition = "TEXT")
+    private String internships;
+
+    @Column(name = "profile_completion_percentage")
+    private Integer profileCompletionPercentage = 0;
+
     @Column(name = "experience_years")
     private Integer experienceYears = 0;
 
@@ -187,6 +205,54 @@ public class CandidateProfile {
 
     public void setResumeOriginalName(String resumeOriginalName) {
         this.resumeOriginalName = resumeOriginalName;
+    }
+
+    public String getSoftSkills() {
+        return softSkills;
+    }
+
+    public void setSoftSkills(String softSkills) {
+        this.softSkills = softSkills;
+    }
+
+    public Double getCgpa() {
+        return cgpa;
+    }
+
+    public void setCgpa(Double cgpa) {
+        this.cgpa = cgpa;
+    }
+
+    public Integer getGraduationYear() {
+        return graduationYear;
+    }
+
+    public void setGraduationYear(Integer graduationYear) {
+        this.graduationYear = graduationYear;
+    }
+
+    public String getWorkExperienceDetails() {
+        return workExperienceDetails;
+    }
+
+    public void setWorkExperienceDetails(String workExperienceDetails) {
+        this.workExperienceDetails = workExperienceDetails;
+    }
+
+    public String getInternships() {
+        return internships;
+    }
+
+    public void setInternships(String internships) {
+        this.internships = internships;
+    }
+
+    public Integer getProfileCompletionPercentage() {
+        return profileCompletionPercentage;
+    }
+
+    public void setProfileCompletionPercentage(Integer profileCompletionPercentage) {
+        this.profileCompletionPercentage = profileCompletionPercentage;
     }
 
     public LocalDateTime getUpdatedAt() {

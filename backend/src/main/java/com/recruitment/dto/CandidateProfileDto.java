@@ -1,6 +1,7 @@
 package com.recruitment.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class CandidateProfileDto {
     private Long id;
@@ -19,6 +20,13 @@ public class CandidateProfileDto {
     private String portfolioUrl;
     private String resumeFileName;
     private String resumeOriginalName;
+    private String softSkills;
+    private Double cgpa;
+    private Integer graduationYear;
+    private String workExperienceDetails;
+    private String internships;
+    private Integer profileCompletionPercentage;
+    private List<CandidateProjectDto> projects;
     private LocalDateTime updatedAt;
 
     public CandidateProfileDto() {}
@@ -158,4 +166,19 @@ public class CandidateProfileDto {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public String getSoftSkills() { return softSkills; }
+    public void setSoftSkills(String softSkills) { this.softSkills = softSkills; }
+    public Double getCgpa() { return cgpa; }
+    public void setCgpa(Double cgpa) { this.cgpa = cgpa; }
+    public Integer getGraduationYear() { return graduationYear; }
+    public void setGraduationYear(Integer graduationYear) { this.graduationYear = graduationYear; }
+    public String getWorkExperienceDetails() { return workExperienceDetails; }
+    public void setWorkExperienceDetails(String workExperienceDetails) { this.workExperienceDetails = workExperienceDetails; }
+    public String getInternships() { return internships; }
+    public void setInternships(String internships) { this.internships = internships; }
+    public Integer getProfileCompletionPercentage() { return profileCompletionPercentage; }
+    public void setProfileCompletionPercentage(Integer profileCompletionPercentage) { this.profileCompletionPercentage = profileCompletionPercentage; }
+    public List<CandidateProjectDto> getProjects() { return projects; }
+    public void setProjects(List<CandidateProjectDto> projects) { this.projects = projects; }
 }
