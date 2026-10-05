@@ -28,7 +28,13 @@ const CreateEditJobPage = () => {
     salaryDisclosed: false,
     deadline: '',
     status: 'ACTIVE',
-    skills: ''
+    skills: '',
+    country: '',
+    state: '',
+    city: '',
+    workMode: 'ONSITE',
+    sourceUrl: '',
+    sourceName: ''
   });
 
   useEffect(() => {
@@ -51,7 +57,13 @@ const CreateEditJobPage = () => {
             salaryDisclosed: !!j.salaryDisclosed,
             deadline: j.deadline || '',
             status: j.status || 'ACTIVE',
-            skills: j.skills || ''
+            skills: j.skills || '',
+            country: j.country || '',
+            state: j.state || '',
+            city: j.city || '',
+            workMode: j.workMode || 'ONSITE',
+            sourceUrl: j.sourceUrl || '',
+            sourceName: j.sourceName || ''
           });
         })
         .catch((err) => {
@@ -152,9 +164,17 @@ const CreateEditJobPage = () => {
               <select name="jobType" className="form-select" value={formData.jobType} onChange={handleChange}>
                 <option value="FULL_TIME">Full Time</option>
                 <option value="PART_TIME">Part Time</option>
-                <option value="REMOTE">Remote</option>
                 <option value="INTERNSHIP">Internship</option>
                 <option value="CONTRACT">Contract</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Work Mode *</label>
+              <select name="workMode" className="form-select" value={formData.workMode} onChange={handleChange}>
+                <option value="ONSITE">In Office</option>
+                <option value="HYBRID">Hybrid</option>
+                <option value="REMOTE">Remote (Work From Home)</option>
               </select>
             </div>
 
@@ -169,7 +189,43 @@ const CreateEditJobPage = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Location *</label>
+              <label className="form-label">Country *</label>
+              <input
+                type="text"
+                name="country"
+                className="form-input"
+                placeholder="e.g. India"
+                value={formData.country}
+                onChange={handleChange}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">State / Province</label>
+              <input
+                type="text"
+                name="state"
+                className="form-input"
+                placeholder="e.g. Gujarat"
+                value={formData.state}
+                onChange={handleChange}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">City</label>
+              <input
+                type="text"
+                name="city"
+                className="form-input"
+                placeholder="e.g. Vadodara"
+                value={formData.city}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Location (Raw / Fallback) *</label>
               <input
                 type="text"
                 name="location"
@@ -271,6 +327,32 @@ const CreateEditJobPage = () => {
                 name="deadline"
                 className="form-input"
                 value={formData.deadline}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
+            <div className="form-group">
+              <label className="form-label">External Source Name (Optional)</label>
+              <input
+                type="text"
+                name="sourceName"
+                className="form-input"
+                placeholder="e.g. LinkedIn, Workday"
+                value={formData.sourceName}
+                onChange={handleChange}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">External Source URL (Optional)</label>
+              <input
+                type="url"
+                name="sourceUrl"
+                className="form-input"
+                placeholder="https://..."
+                value={formData.sourceUrl}
                 onChange={handleChange}
               />
             </div>

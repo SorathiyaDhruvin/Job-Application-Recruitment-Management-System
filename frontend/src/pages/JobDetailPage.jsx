@@ -153,6 +153,29 @@ const JobDetailPage = () => {
     return 'Salary not disclosed';
   };
 
+  const formatLocation = (job) => {
+    if (job.workMode === 'REMOTE') return 'Work From Home';
+    const locArr = [];
+    if (job.city) locArr.push(job.city);
+    if (job.state) locArr.push(job.state);
+    if (job.country) locArr.push(job.country);
+    
+    let locString = locArr.length > 0 ? locArr.join(', ') : job.location;
+    if (!locString) locString = 'Location not specified';
+
+    const modeMap = { ONSITE: 'In Office', HYBRID: 'Hybrid', REMOTE: 'Work From Home' };
+    const mode = job.workMode ? modeMap[job.workMode] : null;
+    
+    return mode ? `${mode} | ${locString}` : locString;
+  };
+
+  const getWorkModeDisplay = (mode) => {
+    if (mode === 'ONSITE') return 'IN OFFICE';
+    if (mode === 'HYBRID') return 'HYBRID';
+    if (mode === 'REMOTE') return 'WORK FROM HOME';
+    return mode;
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem 0', color: '#64748B' }}>
@@ -198,8 +221,16 @@ const JobDetailPage = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
                 <span style={{ fontSize: '1.05rem', fontWeight: 600, color: '#4F46E5' }}>{job.companyName}</span>
-                <span className="badge badge-active">{job.status}</span>
+                {job.sourceName && (
+                  <span style={{ fontSize: '0.85rem', color: '#64748B' }}>via {job.sourceName}</span>
+                )}
+                <span className="badge badge-active" style={{ marginLeft: '0.5rem' }}>{job.status}</span>
                 <span className="badge badge-applied">{job.jobType.replace('_', ' ')}</span>
+                {job.workMode && (
+                  <span className="badge" style={{ background: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', fontWeight: 600 }}>
+                    {getWorkModeDisplay(job.workMode)}
+                  </span>
+                )}
                 <span className="badge badge-tag">{job.experienceLevel}</span>
               </div>
 
@@ -209,10 +240,10 @@ const JobDetailPage = () => {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.9rem', color: '#64748B', flexWrap: 'wrap' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <MapPin size={16} /> {job.location}
+                  <MapPin size={16} /> {formatLocation(job)}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#0F172A' }}>
-                  <DollarSign size={16} color="#10B981" /> {formatSalary(job)}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: job.salaryDisclosed ? 700 : 500, color: job.salaryDisclosed ? '#0F172A' : '#64748B' }}>
+                  <DollarSign size={16} color={job.salaryDisclosed ? '#10B981' : '#64748B'} /> {formatSalary(job)}
                 </span>
                 {job.deadline && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -244,14 +275,17 @@ const JobDetailPage = () => {
                 <CheckCircle size={18} style={{ marginRight: 6 }} /> Applied
               </div>
             ) : job.sourceUrl ? (
-              <a
-                href={job.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-primary btn-lg"
-              >
-                Apply on Company Website <ExternalLink size={18} style={{ marginLeft: 6 }} />
-              </a>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                <a
+                  href={job.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary btn-lg"
+                >
+                  Apply on Company Website <ExternalLink size={18} style={{ marginLeft: 6 }} />
+                </a>
+                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Application handled by {job.companyName}</span>
+              </div>
             ) : (
               <button
                 onClick={() => {
@@ -399,9 +433,27 @@ const JobDetailPage = () => {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748B' }}>Location:</span>
-                <span style={{ fontWeight: 600 }}>{job.location}</span>
+                <span style={{ fontWeight: 600, textAlign: 'right', maxWidth: '60%' }}>{formatLocation(job)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              {job.workMode && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748B' }}>Work Mode:</span>
+                  <span style={{ fontWeight: 600 }}>{getWorkModeDisplay(job.workMode)}</span>
+                </div>
+              )}
+              {job.sourceName && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748B' }}>Source:</span>
+                  <span style={{ fontWeight: 600 }}>{job.sourceName}</span>
+                </div>
+              )}
+              {job.lastVerifiedAt && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748B' }}>Last Verified:</span>
+                  <span style={{ fontWeight: 600 }}>{new Date(job.lastVerifiedAt).toLocaleDateString()}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
                 <span style={{ color: '#64748B' }}>Total Applicants:</span>
                 <span style={{ fontWeight: 600 }}>{job.applicantCount} candidates</span>
               </div>

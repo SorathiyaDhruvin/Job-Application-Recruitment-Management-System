@@ -35,6 +35,22 @@ const MyJobsPage = () => {
     fetchMyJobs();
   }, []);
 
+  const formatLocation = (job) => {
+    if (job.workMode === 'REMOTE') return 'Work From Home';
+    const locArr = [];
+    if (job.city) locArr.push(job.city);
+    if (job.state) locArr.push(job.state);
+    if (job.country) locArr.push(job.country);
+    
+    let locString = locArr.length > 0 ? locArr.join(', ') : job.location;
+    if (!locString) locString = 'Location not specified';
+
+    const modeMap = { ONSITE: 'In Office', HYBRID: 'Hybrid', REMOTE: 'Work From Home' };
+    const mode = job.workMode ? modeMap[job.workMode] : null;
+    
+    return mode ? `${mode} | ${locString}` : locString;
+  };
+
   const handleDeleteJob = async (jobId) => {
     if (!window.confirm('Are you sure you want to delete this job posting? This action cannot be undone.')) {
       return;
@@ -123,7 +139,7 @@ const MyJobsPage = () => {
                   </td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.85rem' }}>
-                      <MapPin size={13} color="#64748B" /> {job.location}
+                      <MapPin size={13} color="#64748B" /> {formatLocation(job)}
                     </div>
                   </td>
                   <td>

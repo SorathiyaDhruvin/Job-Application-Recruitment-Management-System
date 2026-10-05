@@ -19,10 +19,21 @@ public class JobResponse {
     private Long recruiterId;
     private String recruiterName;
     private String location;
+    private String country;
+    private String state;
+    private String city;
+    private String workMode;
     private JobType jobType;
     private ExperienceLevel experienceLevel;
     private Double salaryMin;
     private Double salaryMax;
+    private String salaryCurrency;
+    private String salaryText;
+    private Boolean salaryDisclosed;
+    private String sourceUrl;
+    private String sourceName;
+    private LocalDateTime sourcePublishedAt;
+    private LocalDateTime lastVerifiedAt;
     private LocalDate deadline;
     private JobStatus status;
     private String skills;
@@ -130,6 +141,38 @@ public class JobResponse {
         this.location = location;
     }
 
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getWorkMode() {
+        return workMode;
+    }
+
+    public void setWorkMode(String workMode) {
+        this.workMode = workMode;
+    }
+
     public JobType getJobType() {
         return jobType;
     }
@@ -160,6 +203,62 @@ public class JobResponse {
 
     public void setSalaryMax(Double salaryMax) {
         this.salaryMax = salaryMax;
+    }
+
+    public String getSalaryCurrency() {
+        return salaryCurrency;
+    }
+
+    public void setSalaryCurrency(String salaryCurrency) {
+        this.salaryCurrency = salaryCurrency;
+    }
+
+    public String getSalaryText() {
+        return salaryText;
+    }
+
+    public void setSalaryText(String salaryText) {
+        this.salaryText = salaryText;
+    }
+
+    public Boolean getSalaryDisclosed() {
+        return salaryDisclosed;
+    }
+
+    public void setSalaryDisclosed(Boolean salaryDisclosed) {
+        this.salaryDisclosed = salaryDisclosed;
+    }
+
+    public String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    public void setSourceUrl(String sourceUrl) {
+        this.sourceUrl = sourceUrl;
+    }
+
+    public String getSourceName() {
+        return sourceName;
+    }
+
+    public void setSourceName(String sourceName) {
+        this.sourceName = sourceName;
+    }
+
+    public LocalDateTime getSourcePublishedAt() {
+        return sourcePublishedAt;
+    }
+
+    public void setSourcePublishedAt(LocalDateTime sourcePublishedAt) {
+        this.sourcePublishedAt = sourcePublishedAt;
+    }
+
+    public LocalDateTime getLastVerifiedAt() {
+        return lastVerifiedAt;
+    }
+
+    public void setLastVerifiedAt(LocalDateTime lastVerifiedAt) {
+        this.lastVerifiedAt = lastVerifiedAt;
     }
 
     public LocalDate getDeadline() {

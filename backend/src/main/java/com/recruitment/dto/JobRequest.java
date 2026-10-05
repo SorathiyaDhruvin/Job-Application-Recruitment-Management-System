@@ -23,6 +23,11 @@ public class JobRequest {
     @NotBlank(message = "Location is required")
     private String location;
 
+    private String country;
+    private String state;
+    private String city;
+    private String workMode;
+
     @NotNull(message = "Job type is required")
     private JobType jobType;
 
@@ -31,6 +36,9 @@ public class JobRequest {
 
     private Double salaryMin;
     private Double salaryMax;
+    private String salaryCurrency;
+    private String salaryText;
+    private Boolean salaryDisclosed;
     private LocalDate deadline;
     private JobStatus status = JobStatus.ACTIVE;
     private String skills;
@@ -85,6 +93,38 @@ public class JobRequest {
         this.location = location;
     }
 
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getWorkMode() {
+        return workMode;
+    }
+
+    public void setWorkMode(String workMode) {
+        this.workMode = workMode;
+    }
+
     public JobType getJobType() {
         return jobType;
     }
@@ -115,6 +155,30 @@ public class JobRequest {
 
     public void setSalaryMax(Double salaryMax) {
         this.salaryMax = salaryMax;
+    }
+
+    public String getSalaryCurrency() {
+        return salaryCurrency;
+    }
+
+    public void setSalaryCurrency(String salaryCurrency) {
+        this.salaryCurrency = salaryCurrency;
+    }
+
+    public String getSalaryText() {
+        return salaryText;
+    }
+
+    public void setSalaryText(String salaryText) {
+        this.salaryText = salaryText;
+    }
+
+    public Boolean getSalaryDisclosed() {
+        return salaryDisclosed;
+    }
+
+    public void setSalaryDisclosed(Boolean salaryDisclosed) {
+        this.salaryDisclosed = salaryDisclosed;
     }
 
     public LocalDate getDeadline() {

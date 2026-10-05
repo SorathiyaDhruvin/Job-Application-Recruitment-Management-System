@@ -29,11 +29,19 @@ public class JobController {
     public ResponseEntity<ApiResponse<List<JobResponse>>> searchJobs(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String workMode,
             @RequestParam(required = false) JobType jobType,
             @RequestParam(required = false) ExperienceLevel experienceLevel,
-            @RequestParam(required = false) JobStatus status
+            @RequestParam(required = false) Boolean salaryDisclosed,
+            @RequestParam(required = false) JobStatus status,
+            @RequestParam(required = false, defaultValue = "newest") String sortBy
     ) {
-        List<JobResponse> jobs = jobService.searchJobs(keyword, location, jobType, experienceLevel, status);
+        List<JobResponse> jobs = jobService.searchJobs(
+            keyword, location, country, state, city, workMode, jobType, experienceLevel, salaryDisclosed, status, sortBy
+        );
         return ResponseEntity.ok(ApiResponse.ok("Jobs retrieved successfully", jobs));
     }
 

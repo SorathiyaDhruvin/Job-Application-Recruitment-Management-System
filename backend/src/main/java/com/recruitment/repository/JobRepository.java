@@ -4,6 +4,7 @@ import com.recruitment.entity.ExperienceLevel;
 import com.recruitment.entity.Job;
 import com.recruitment.entity.JobStatus;
 import com.recruitment.entity.JobType;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface JobRepository extends JpaRepository<Job, Long> {
+public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
 
     List<Job> findByRecruiterIdOrderByCreatedAtDesc(Long recruiterId);
 

@@ -46,18 +46,42 @@ public class JobService {
     public List<JobResponse> searchJobs(
             String keyword,
             String location,
+            String country,
+            String state,
+            String city,
+            String workMode,
             JobType jobType,
             ExperienceLevel experienceLevel,
-            JobStatus status
+            Boolean salaryDisclosed,
+            JobStatus status,
+            String sortBy
     ) {
         JobStatus effectiveStatus = status != null ? status : JobStatus.ACTIVE;
-        List<Job> jobs = jobRepository.searchJobs(
-                keyword != null && !keyword.isBlank() ? keyword.trim() : null,
-                location != null && !location.isBlank() ? location.trim() : null,
-                jobType,
-                experienceLevel,
-                effectiveStatus
+        
+        org.springframework.data.jpa.domain.Specification<Job> spec = JobSpecification.filterJobs(
+            keyword, location, country, state, city, workMode, jobType, experienceLevel, salaryDisclosed, effectiveStatus
         );
+
+        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
+        if (sortBy != null) {
+            switch (sortBy.toLowerCase()) {
+                case "deadline":
+                    sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "deadline");
+                    break;
+                case "salary_desc":
+                    sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "salaryMax");
+                    break;
+                case "salary_asc":
+                    sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "salaryMin");
+                    break;
+                // 'relevance' can just default to newest for now, or text search rank, but DB doesn't support easy rank sorting natively without native query.
+                default:
+                    sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
+                    break;
+            }
+        }
+
+        List<Job> jobs = jobRepository.findAll(spec, sort);
 
         Long currentCandidateId = getCurrentCandidateUserIdOrNull();
 
@@ -115,10 +139,17 @@ public class JobService {
         job.setCompany(company);
         job.setRecruiter(currentUser);
         job.setLocation(request.getLocation());
+        job.setCountry(request.getCountry());
+        job.setState(request.getState());
+        job.setCity(request.getCity());
+        job.setWorkMode(request.getWorkMode());
         job.setJobType(request.getJobType() != null ? request.getJobType() : JobType.FULL_TIME);
         job.setExperienceLevel(request.getExperienceLevel() != null ? request.getExperienceLevel() : ExperienceLevel.MID);
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
+        job.setSalaryCurrency(request.getSalaryCurrency());
+        job.setSalaryText(request.getSalaryText());
+        job.setSalaryDisclosed(request.getSalaryDisclosed() != null ? request.getSalaryDisclosed() : false);
         job.setDeadline(request.getDeadline());
         job.setStatus(request.getStatus() != null ? request.getStatus() : JobStatus.ACTIVE);
         job.setSkills(request.getSkills());
@@ -146,10 +177,17 @@ public class JobService {
         job.setResponsibilities(request.getResponsibilities());
         job.setRequirements(request.getRequirements());
         job.setLocation(request.getLocation());
+        if (request.getCountry() != null) job.setCountry(request.getCountry());
+        if (request.getState() != null) job.setState(request.getState());
+        if (request.getCity() != null) job.setCity(request.getCity());
+        if (request.getWorkMode() != null) job.setWorkMode(request.getWorkMode());
         if (request.getJobType() != null) job.setJobType(request.getJobType());
         if (request.getExperienceLevel() != null) job.setExperienceLevel(request.getExperienceLevel());
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
+        job.setSalaryCurrency(request.getSalaryCurrency());
+        job.setSalaryText(request.getSalaryText());
+        if (request.getSalaryDisclosed() != null) job.setSalaryDisclosed(request.getSalaryDisclosed());
         job.setDeadline(request.getDeadline());
         if (request.getStatus() != null) job.setStatus(request.getStatus());
         job.setSkills(request.getSkills());
@@ -209,10 +247,21 @@ public class JobService {
         dto.setResponsibilities(job.getResponsibilities());
         dto.setRequirements(job.getRequirements());
         dto.setLocation(job.getLocation());
+        dto.setCountry(job.getCountry());
+        dto.setState(job.getState());
+        dto.setCity(job.getCity());
+        dto.setWorkMode(job.getWorkMode());
         dto.setJobType(job.getJobType());
         dto.setExperienceLevel(job.getExperienceLevel());
         dto.setSalaryMin(job.getSalaryMin());
         dto.setSalaryMax(job.getSalaryMax());
+        dto.setSalaryCurrency(job.getSalaryCurrency());
+        dto.setSalaryText(job.getSalaryText());
+        dto.setSalaryDisclosed(job.getSalaryDisclosed());
+        dto.setSourceUrl(job.getSourceUrl());
+        dto.setSourceName(job.getSourceName());
+        dto.setSourcePublishedAt(job.getSourcePublishedAt());
+        dto.setLastVerifiedAt(job.getLastVerifiedAt());
         dto.setDeadline(job.getDeadline());
         dto.setStatus(job.getStatus());
         dto.setSkills(job.getSkills());
