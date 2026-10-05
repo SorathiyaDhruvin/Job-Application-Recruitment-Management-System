@@ -104,10 +104,14 @@ const JobSearchPage = () => {
     setSearchParams({});
   };
 
-  const formatSalary = (min, max) => {
-    if (!min && !max) return 'Competitive Salary';
-    if (min && max) return `$${(min / 1000).toFixed(0)}k - $${(max / 1000).toFixed(0)}k / yr`;
-    return min ? `From $${(min / 1000).toFixed(0)}k` : `Up to $${(max / 1000).toFixed(0)}k`;
+  const formatSalary = (job) => {
+    if (job.salaryDisclosed === false) return 'Salary not disclosed';
+    if (job.salaryText) return job.salaryText;
+    const curr = job.salaryCurrency || '$';
+    if (job.salaryMin && job.salaryMax) return `${curr}${job.salaryMin.toLocaleString()} - ${curr}${job.salaryMax.toLocaleString()}`;
+    if (job.salaryMin) return `From ${curr}${job.salaryMin.toLocaleString()}`;
+    if (job.salaryMax) return `Up to ${curr}${job.salaryMax.toLocaleString()}`;
+    return 'Salary not disclosed';
   };
 
   return (
@@ -303,7 +307,7 @@ const JobSearchPage = () => {
                             <MapPin size={14} /> {job.location}
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: '#0F172A' }}>
-                            <DollarSign size={14} color="#10B981" /> {formatSalary(job.salaryMin, job.salaryMax)}
+                            <DollarSign size={14} color="#10B981" /> {formatSalary(job)}
                           </span>
                           {job.deadline && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

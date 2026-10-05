@@ -21,6 +21,18 @@ public class Company {
 
     private String website;
 
+    @Column(name = "domain")
+    private String domain;
+
+    @Column(name = "industry")
+    private String industry;
+
+    @Column(name = "headquarters")
+    private String headquarters;
+
+    @Column(name = "company_size")
+    private String companySize;
+
     private String location;
 
     @Column(name = "logo_url")
@@ -48,67 +60,39 @@ public class Company {
         this.verified = false;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getWebsite() { return website; }
+    public void setWebsite(String website) { this.website = website; }
 
-    public String getDescription() {
-        return description;
-    }
+    public String getDomain() { return domain; }
+    public void setDomain(String domain) { this.domain = domain; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getIndustry() { return industry; }
+    public void setIndustry(String industry) { this.industry = industry; }
 
-    public String getWebsite() {
-        return website;
-    }
+    public String getHeadquarters() { return headquarters; }
+    public void setHeadquarters(String headquarters) { this.headquarters = headquarters; }
 
-    public void setWebsite(String website) {
-        this.website = website;
-    }
+    public String getCompanySize() { return companySize; }
+    public void setCompanySize(String companySize) { this.companySize = companySize; }
 
-    public String getLocation() {
-        return location;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
 
-    public String getLogoUrl() {
-        return logoUrl;
-    }
+    public boolean isVerified() { return verified; }
+    public void setVerified(boolean verified) { this.verified = verified; }
 
-    public void setLogoUrl(String logoUrl) {
-        this.logoUrl = logoUrl;
-    }
-
-    public boolean isVerified() {
-        return verified;
-    }
-
-    public void setVerified(boolean verified) {
-        this.verified = verified;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

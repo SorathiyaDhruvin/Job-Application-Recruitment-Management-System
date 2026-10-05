@@ -23,6 +23,9 @@ const CreateEditJobPage = () => {
     experienceLevel: 'MID',
     salaryMin: '',
     salaryMax: '',
+    salaryCurrency: 'USD',
+    salaryText: '',
+    salaryDisclosed: false,
     deadline: '',
     status: 'ACTIVE',
     skills: ''
@@ -43,6 +46,9 @@ const CreateEditJobPage = () => {
             experienceLevel: j.experienceLevel || 'MID',
             salaryMin: j.salaryMin || '',
             salaryMax: j.salaryMax || '',
+            salaryCurrency: j.salaryCurrency || 'USD',
+            salaryText: j.salaryText || '',
+            salaryDisclosed: !!j.salaryDisclosed,
             deadline: j.deadline || '',
             status: j.status || 'ACTIVE',
             skills: j.skills || ''
@@ -58,8 +64,8 @@ const CreateEditJobPage = () => {
   }, [id, isEditMode]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -80,6 +86,9 @@ const CreateEditJobPage = () => {
         ...formData,
         salaryMin: formData.salaryMin ? Number(formData.salaryMin) : null,
         salaryMax: formData.salaryMax ? Number(formData.salaryMax) : null,
+        salaryCurrency: formData.salaryCurrency || 'USD',
+        salaryText: formData.salaryText || null,
+        salaryDisclosed: formData.salaryDisclosed,
         deadline: formData.deadline ? formData.deadline : null
       };
 
@@ -190,29 +199,70 @@ const CreateEditJobPage = () => {
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-            <div className="form-group">
-              <label className="form-label">Minimum Annual Salary ($)</label>
-              <input
-                type="number"
-                name="salaryMin"
-                className="form-input"
-                placeholder="e.g. 100000"
-                value={formData.salaryMin}
-                onChange={handleChange}
-              />
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600, color: '#0F172A' }}>
+                <input
+                  type="checkbox"
+                  name="salaryDisclosed"
+                  checked={formData.salaryDisclosed}
+                  onChange={handleChange}
+                  style={{ width: 16, height: 16 }}
+                />
+                Disclose Salary to Candidates
+              </label>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Maximum Annual Salary ($)</label>
-              <input
-                type="number"
-                name="salaryMax"
-                className="form-input"
-                placeholder="e.g. 140000"
-                value={formData.salaryMax}
-                onChange={handleChange}
-              />
-            </div>
+            {formData.salaryDisclosed && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Currency (e.g. USD, INR, GBP)</label>
+                  <input
+                    type="text"
+                    name="salaryCurrency"
+                    className="form-input"
+                    placeholder="USD"
+                    value={formData.salaryCurrency}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Exact Text (Overrides Min/Max)</label>
+                  <input
+                    type="text"
+                    name="salaryText"
+                    className="form-input"
+                    placeholder="e.g. $120,000 - $180,000 per year"
+                    value={formData.salaryText}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Minimum Annual Salary</label>
+                  <input
+                    type="number"
+                    name="salaryMin"
+                    className="form-input"
+                    placeholder="e.g. 100000"
+                    value={formData.salaryMin}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Maximum Annual Salary</label>
+                  <input
+                    type="number"
+                    name="salaryMax"
+                    className="form-input"
+                    placeholder="e.g. 140000"
+                    value={formData.salaryMax}
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            )}
 
             <div className="form-group">
               <label className="form-label">Application Deadline</label>

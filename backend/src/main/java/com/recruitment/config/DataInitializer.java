@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -64,6 +65,9 @@ public class DataInitializer implements CommandLineRunner {
                 "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=120&auto=format&fit=crop&q=60"
         );
         techCorp.setVerified(true);
+        techCorp.setIndustry("Technology / Cloud Computing");
+        techCorp.setCompanySize("10,000+ employees");
+        techCorp.setHeadquarters("San Francisco, CA");
         techCorp = companyRepository.save(techCorp);
 
         Company cloudScale = new Company(
@@ -74,6 +78,9 @@ public class DataInitializer implements CommandLineRunner {
                 "https://images.unsplash.com/photo-1551434678-e076c223a692?w=120&auto=format&fit=crop&q=60"
         );
         cloudScale.setVerified(true);
+        cloudScale.setIndustry("Infrastructure Software");
+        cloudScale.setCompanySize("1,000-5,000 employees");
+        cloudScale.setHeadquarters("New York, NY");
         cloudScale = companyRepository.save(cloudScale);
 
         Company finTech = new Company(
@@ -84,6 +91,9 @@ public class DataInitializer implements CommandLineRunner {
                 "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=120&auto=format&fit=crop&q=60"
         );
         finTech.setVerified(true);
+        finTech.setIndustry("Financial Technology");
+        finTech.setCompanySize("500-1,000 employees");
+        finTech.setHeadquarters("Boston, MA");
         finTech = companyRepository.save(finTech);
 
         // 3. Create Recruiters
@@ -139,124 +149,124 @@ public class DataInitializer implements CommandLineRunner {
         candidate3Profile.setExperienceYears(3);
         candidateProfileRepository.save(candidate3Profile);
 
-        // 5. Create Realistic Job Postings
+        // 5. Create Realistic Job Postings (No fake salaries)
         Job job1 = createJobHelper(
-                "Senior Full Stack Java & React Developer",
+                "Senior Full Stack Java & React Developer (DEMO)",
                 "We are seeking an experienced Full Stack Developer to build our flagship enterprise recruiter and workforce collaboration suite. You will work across modern Spring Boot services and dynamic React applications.",
                 "- Architect and maintain mission-critical Spring Boot microservices.\n- Build responsive, accessible frontend workflows using React and TypeScript.\n- Collaborate with product designers and DevOps engineers on CI/CD automation.\n- Optimize PostgreSQL query performance and data pipelines.",
                 "- 3+ years of professional full-stack development experience.\n- Strong proficiency in Java 17+, Spring Boot, Spring Security, and JPA.\n- Hands-on expertise in React.js, modern CSS, and state management.\n- Deep understanding of RESTful API design and PostgreSQL.",
                 techCorp, recruiter1User, "San Francisco, CA / Remote",
-                JobType.FULL_TIME, ExperienceLevel.SENIOR, 130000.0, 160000.0,
+                JobType.FULL_TIME, ExperienceLevel.SENIOR,
                 LocalDate.now().plusDays(45), "Java, Spring Boot, React, PostgreSQL, Docker, REST APIs"
         );
 
         Job job2 = createJobHelper(
-                "Backend Software Engineer - Spring Boot",
+                "Backend Software Engineer - Spring Boot (DEMO)",
                 "Join CloudScale Systems to design and implement highly reliable distributed services handling millions of events daily. You will build high-throughput backend APIs.",
                 "- Design and scale clean REST APIs using Spring Boot and Spring MVC.\n- Maintain database schemas, migrations, and performance optimizations on PostgreSQL.\n- Implement secure authentication and token management with OAuth2/JWT.\n- Write comprehensive unit and integration tests.",
                 "- Strong fundamentals in Data Structures, Algorithms, and Object-Oriented Design.\n- 2+ years experience building backend systems in Java/Spring Boot.\n- Experience with relational databases (PostgreSQL/MySQL) and caching (Redis).\n- Familiarity with Docker and Git workflows.",
                 cloudScale, recruiter2User, "New York, NY / Hybrid",
-                JobType.FULL_TIME, ExperienceLevel.MID, 110000.0, 140000.0,
+                JobType.FULL_TIME, ExperienceLevel.MID,
                 LocalDate.now().plusDays(30), "Java, Spring Boot, Hibernate, PostgreSQL, JUnit, Docker"
         );
 
         Job job3 = createJobHelper(
-                "Frontend React Engineer",
+                "Frontend React Engineer (DEMO)",
                 "Looking for a passionate Frontend Engineer to craft sleek, responsive, and accessible user experiences for our recruitment dashboard and job candidate portal.",
                 "- Develop reusable UI component libraries and modular pages in React.\n- Integrate RESTful endpoints using Axios and manage client-side state.\n- Ensure responsive layout fidelity across mobile, tablet, and desktop screens.\n- Improve client performance, web vitals, and rendering speed.",
                 "- 2+ years of React development experience.\n- Excellent mastery of modern JavaScript (ES6+), HTML5, and CSS3.\n- Experience with React Router, context API, and asynchronous state handling.\n- Portfolio demonstrating strong design aesthetic and clean code.",
                 techCorp, recruiter1User, "Remote",
-                JobType.FULL_TIME, ExperienceLevel.MID, 95000.0, 125000.0,
+                JobType.FULL_TIME, ExperienceLevel.MID,
                 LocalDate.now().plusDays(25), "React, JavaScript, CSS3, HTML5, Axios, Webpack"
         );
 
         Job job4 = createJobHelper(
-                "DevOps & Cloud Infrastructure Specialist",
+                "DevOps & Cloud Infrastructure Specialist (DEMO)",
                 "Lead the evolution of our cloud infrastructure and automated deployment pipelines across multi-region environments.",
                 "- Automate container orchestration using Kubernetes and Docker.\n- Build and maintain continuous integration pipelines (GitHub Actions/Jenkins).\n- Monitor system telemetry, error budgets, and latency metrics.\n- Enhance security posture and infrastructure as code (Terraform).",
                 "- 3+ years in DevOps or Cloud Engineering.\n- Strong expertise in AWS or GCP cloud services.\n- Deep familiarity with Linux environments and bash scripting.\n- Experience deploying Spring Boot and React production services.",
                 cloudScale, recruiter2User, "Remote",
-                JobType.FULL_TIME, ExperienceLevel.SENIOR, 120000.0, 155000.0,
+                JobType.FULL_TIME, ExperienceLevel.SENIOR,
                 LocalDate.now().plusDays(40), "AWS, Kubernetes, Docker, Terraform, CI/CD, Linux"
         );
 
         Job job5 = createJobHelper(
-                "Junior Java Software Engineer",
+                "Junior Java Software Engineer (DEMO)",
                 "An exciting opportunity for entry-level developers or recent graduates to learn, grow, and build enterprise-grade software in a supportive engineering environment.",
                 "- Develop and maintain backend endpoints using Java and Spring Boot.\n- Participate in code reviews, design sessions, and sprint planning.\n- Write unit tests and maintain technical documentation.\n- Troubleshoot bugs and implement feature enhancements.",
                 "- Degree in Computer Science, Software Engineering, or related technical field.\n- Strong foundation in Core Java (Collections, Streams, Multithreading, OOP).\n- Basic familiarity with Spring framework and SQL databases.\n- High enthusiasm and eagerness to learn modern engineering practices.",
                 techCorp, recruiter1User, "San Francisco, CA",
-                JobType.FULL_TIME, ExperienceLevel.ENTRY, 70000.0, 90000.0,
+                JobType.FULL_TIME, ExperienceLevel.ENTRY,
                 LocalDate.now().plusDays(60), "Java, Spring Boot, SQL, Git, OOP"
         );
 
         Job job6 = createJobHelper(
-                "Lead Distributed Systems Architect",
+                "Lead Distributed Systems Architect (DEMO)",
                 "Provide technical vision, architectural leadership, and engineering excellence across our entire suite of distributed enterprise systems.",
                 "- Drive architectural decisions for high-throughput, low-latency microservices.\n- Mentor engineering teams and champion software design patterns.\n- Lead technology evaluations and system migrations.\n- Partner with executive leadership on the strategic technical roadmap.",
                 "- 7+ years in software engineering with leadership experience.\n- Deep mastery of Java ecosystem, distributed consensus, and event-driven architecture.\n- Proven track record of scaling systems to millions of active users.",
                 techCorp, recruiter1User, "San Francisco, CA / Hybrid",
-                JobType.FULL_TIME, ExperienceLevel.LEAD, 175000.0, 215000.0,
+                JobType.FULL_TIME, ExperienceLevel.LEAD,
                 LocalDate.now().plusDays(50), "Java, Microservices, System Design, Kafka, PostgreSQL, Distributed Systems"
         );
 
         createJobHelper(
-                "FinTech Platform Security Engineer",
+                "FinTech Platform Security Engineer (DEMO)",
                 "Protect payment transactions, user data confidentiality, and compliance across our modern fintech processing engine.",
                 "- Conduct penetration testing, vulnerability assessments, and secure code reviews.\n- Implement cryptography, key management, and zero-trust authentication.\n- Maintain regulatory compliance with PCI-DSS and SOC2 standards.\n- Automate security scans in CI/CD pipelines.",
                 "- 4+ years dedicated to application and infrastructure security.\n- Knowledge of OWASP Top 10, TLS/SSL, OAuth2, and JWT standards.\n- Experience with secure Java development practices.",
                 finTech, recruiter1User, "Boston, MA / Hybrid",
-                JobType.FULL_TIME, ExperienceLevel.SENIOR, 135000.0, 165000.0,
+                JobType.FULL_TIME, ExperienceLevel.SENIOR,
                 LocalDate.now().plusDays(35), "Security, OAuth2, JWT, Cryptography, OWASP, Java"
         );
 
         createJobHelper(
-                "Software Engineering Intern - Summer 2026",
+                "Software Engineering Intern - Summer 2026 (DEMO)",
                 "Join our paid 12-week summer internship program! You will work alongside experienced mentors on real production features.",
                 "- Collaborate on real customer-facing features.\n- Learn full-stack development patterns in Spring Boot and React.\n- Present your capstone project to company engineering leaders at the end of the term.",
                 "- Currently pursuing a Bachelor's or Master's in Computer Science.\n- Familiarity with at least one programming language (Java, JavaScript, Python).\n- Passion for solving interesting technical problems.",
                 cloudScale, recruiter2User, "Remote",
-                JobType.INTERNSHIP, ExperienceLevel.ENTRY, 45000.0, 60000.0,
+                JobType.INTERNSHIP, ExperienceLevel.ENTRY,
                 LocalDate.now().plusDays(90), "Java, React, SQL, Git, Problem Solving"
         );
 
         createJobHelper(
-                "Data Platform & Pipeline Engineer",
+                "Data Platform & Pipeline Engineer (DEMO)",
                 "Build modern real-time and batch data pipelines that empower data analytics, financial reconciliation, and machine learning models.",
                 "- Design ETL data pipelines and streaming workflows.\n- Model relational and analytical databases for optimal querying.\n- Ensure data integrity, validation, and SLA adherence.",
                 "- 3+ years experience with database systems and data streaming.\n- Strong SQL and Java/Python skills.\n- Experience with PostgreSQL, Kafka, or Spark.",
                 finTech, recruiter2User, "Boston, MA / Hybrid",
-                JobType.FULL_TIME, ExperienceLevel.MID, 115000.0, 145000.0,
+                JobType.FULL_TIME, ExperienceLevel.MID,
                 LocalDate.now().plusDays(28), "SQL, PostgreSQL, Java, Kafka, ETL, Data Warehousing"
         );
 
         createJobHelper(
-                "Mobile Application Developer (React Native)",
+                "Mobile Application Developer (React Native) (DEMO)",
                 "Develop cross-platform mobile recruitment apps allowing candidates and recruiters to connect on the go.",
                 "- Build cross-platform iOS and Android mobile features with React Native.\n- Integrate push notifications, real-time messaging, and secure biometric login.\n- Ensure smooth 60fps UI animations and native device compatibility.",
                 "- 2+ years of hands-on React Native development.\n- Experience with TypeScript, mobile state management, and REST APIs.\n- App Store or Google Play release experience is a plus.",
                 techCorp, recruiter1User, "Remote",
-                JobType.CONTRACT, ExperienceLevel.MID, 105000.0, 135000.0,
+                JobType.CONTRACT, ExperienceLevel.MID,
                 LocalDate.now().plusDays(40), "React Native, TypeScript, iOS, Android, Mobile UX"
         );
 
         createJobHelper(
-                "Database Administrator & PostgreSQL Specialist",
+                "Database Administrator & PostgreSQL Specialist (DEMO)",
                 "Ensure high availability, backup automation, query tuning, and zero-downtime schema migrations for our core PostgreSQL clusters.",
                 "- Optimize complex SQL queries, indexes, and connection pooling.\n- Automate disaster recovery, backups, and replication failover.\n- Partner with backend engineers on efficient entity-relational schema designs.",
                 "- 4+ years specialized in PostgreSQL administration and tuning.\n- Deep understanding of MVCC, WAL, connection poolers (PgBouncer), and indexing.\n- Experience with cloud-managed databases (AWS RDS / Aurora).",
                 cloudScale, recruiter2User, "New York, NY / Hybrid",
-                JobType.FULL_TIME, ExperienceLevel.SENIOR, 118000.0, 148000.0,
+                JobType.FULL_TIME, ExperienceLevel.SENIOR,
                 LocalDate.now().plusDays(32), "PostgreSQL, Performance Tuning, SQL, Replication, Linux"
         );
 
         createJobHelper(
-                "QA Automation Engineer - Java/Selenium",
+                "QA Automation Engineer - Java/Selenium (DEMO)",
                 "Lead automated quality assurance for our recruitment workflows, building regression suites and performance test frameworks.",
                 "- Design automated test scripts for REST APIs and UI workflows.\n- Integrate test suites into CI/CD deployment pipelines.\n- Work closely with development teams to identify edge cases and reproduce defects.",
                 "- 2+ years in test automation with Java, Selenium, or Playwright.\n- Solid experience testing RESTful APIs with Postman, REST Assured, or Karate.\n- Understanding of Agile testing lifecycle.",
                 finTech, recruiter1User, "Remote",
-                JobType.FULL_TIME, ExperienceLevel.MID, 85000.0, 110000.0,
+                JobType.FULL_TIME, ExperienceLevel.MID,
                 LocalDate.now().plusDays(42), "Java, Selenium, TestNG, REST Assured, CI/CD, QA"
         );
 
@@ -331,8 +341,7 @@ public class DataInitializer implements CommandLineRunner {
     private Job createJobHelper(
             String title, String description, String responsibilities, String requirements,
             Company company, User recruiter, String location, JobType jobType,
-            ExperienceLevel experienceLevel, Double salaryMin, Double salaryMax,
-            LocalDate deadline, String skills
+            ExperienceLevel experienceLevel, LocalDate deadline, String skills
     ) {
         Job job = new Job();
         job.setTitle(title);
@@ -344,8 +353,20 @@ public class DataInitializer implements CommandLineRunner {
         job.setLocation(location);
         job.setJobType(jobType);
         job.setExperienceLevel(experienceLevel);
-        job.setSalaryMin(salaryMin);
-        job.setSalaryMax(salaryMax);
+        
+        // No fake salaries generated
+        job.setSalaryMin(null);
+        job.setSalaryMax(null);
+        job.setSalaryCurrency(null);
+        job.setSalaryText(null);
+        job.setSalaryDisclosed(false);
+
+        // Dummy source data to act as if it's sourced from an external careers page
+        job.setSourceUrl(company.getWebsite() + "/careers/job-" + System.currentTimeMillis());
+        job.setSourceName(company.getName() + " Careers");
+        job.setSourcePublishedAt(LocalDateTime.now().minusDays(5));
+        job.setLastVerifiedAt(LocalDateTime.now());
+
         job.setDeadline(deadline);
         job.setStatus(JobStatus.ACTIVE);
         job.setSkills(skills);

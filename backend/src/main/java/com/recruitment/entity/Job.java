@@ -41,6 +41,18 @@ public class Job {
     @Column(nullable = false)
     private String location;
 
+    @Column(name = "country")
+    private String country;
+
+    @Column(name = "state")
+    private String state;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "work_mode")
+    private String workMode;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "job_type", nullable = false, length = 30)
@@ -56,6 +68,27 @@ public class Job {
 
     @Column(name = "salary_max")
     private Double salaryMax;
+
+    @Column(name = "salary_currency")
+    private String salaryCurrency;
+
+    @Column(name = "salary_text")
+    private String salaryText;
+
+    @Column(name = "salary_disclosed")
+    private Boolean salaryDisclosed = false;
+
+    @Column(name = "source_url")
+    private String sourceUrl;
+
+    @Column(name = "source_name")
+    private String sourceName;
+
+    @Column(name = "source_published_at")
+    private LocalDateTime sourcePublishedAt;
+
+    @Column(name = "last_verified_at")
+    private LocalDateTime lastVerifiedAt;
 
     private LocalDate deadline;
 
@@ -86,139 +119,87 @@ public class Job {
 
     public Job() {}
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getResponsibilities() { return responsibilities; }
+    public void setResponsibilities(String responsibilities) { this.responsibilities = responsibilities; }
 
-    public String getDescription() {
-        return description;
-    }
+    public String getRequirements() { return requirements; }
+    public void setRequirements(String requirements) { this.requirements = requirements; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public Company getCompany() { return company; }
+    public void setCompany(Company company) { this.company = company; }
 
-    public String getResponsibilities() {
-        return responsibilities;
-    }
+    public User getRecruiter() { return recruiter; }
+    public void setRecruiter(User recruiter) { this.recruiter = recruiter; }
 
-    public void setResponsibilities(String responsibilities) {
-        this.responsibilities = responsibilities;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public String getRequirements() {
-        return requirements;
-    }
+    public String getCountry() { return country; }
+    public void setCountry(String country) { this.country = country; }
 
-    public void setRequirements(String requirements) {
-        this.requirements = requirements;
-    }
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
 
-    public Company getCompany() {
-        return company;
-    }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
 
-    public void setCompany(Company company) {
-        this.company = company;
-    }
+    public String getWorkMode() { return workMode; }
+    public void setWorkMode(String workMode) { this.workMode = workMode; }
 
-    public User getRecruiter() {
-        return recruiter;
-    }
+    public JobType getJobType() { return jobType; }
+    public void setJobType(JobType jobType) { this.jobType = jobType; }
 
-    public void setRecruiter(User recruiter) {
-        this.recruiter = recruiter;
-    }
+    public ExperienceLevel getExperienceLevel() { return experienceLevel; }
+    public void setExperienceLevel(ExperienceLevel experienceLevel) { this.experienceLevel = experienceLevel; }
 
-    public String getLocation() {
-        return location;
-    }
+    public Double getSalaryMin() { return salaryMin; }
+    public void setSalaryMin(Double salaryMin) { this.salaryMin = salaryMin; }
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
+    public Double getSalaryMax() { return salaryMax; }
+    public void setSalaryMax(Double salaryMax) { this.salaryMax = salaryMax; }
 
-    public JobType getJobType() {
-        return jobType;
-    }
+    public String getSalaryCurrency() { return salaryCurrency; }
+    public void setSalaryCurrency(String salaryCurrency) { this.salaryCurrency = salaryCurrency; }
 
-    public void setJobType(JobType jobType) {
-        this.jobType = jobType;
-    }
+    public String getSalaryText() { return salaryText; }
+    public void setSalaryText(String salaryText) { this.salaryText = salaryText; }
 
-    public ExperienceLevel getExperienceLevel() {
-        return experienceLevel;
-    }
+    public Boolean getSalaryDisclosed() { return salaryDisclosed; }
+    public void setSalaryDisclosed(Boolean salaryDisclosed) { this.salaryDisclosed = salaryDisclosed; }
 
-    public void setExperienceLevel(ExperienceLevel experienceLevel) {
-        this.experienceLevel = experienceLevel;
-    }
+    public String getSourceUrl() { return sourceUrl; }
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
 
-    public Double getSalaryMin() {
-        return salaryMin;
-    }
+    public String getSourceName() { return sourceName; }
+    public void setSourceName(String sourceName) { this.sourceName = sourceName; }
 
-    public void setSalaryMin(Double salaryMin) {
-        this.salaryMin = salaryMin;
-    }
+    public LocalDateTime getSourcePublishedAt() { return sourcePublishedAt; }
+    public void setSourcePublishedAt(LocalDateTime sourcePublishedAt) { this.sourcePublishedAt = sourcePublishedAt; }
 
-    public Double getSalaryMax() {
-        return salaryMax;
-    }
+    public LocalDateTime getLastVerifiedAt() { return lastVerifiedAt; }
+    public void setLastVerifiedAt(LocalDateTime lastVerifiedAt) { this.lastVerifiedAt = lastVerifiedAt; }
 
-    public void setSalaryMax(Double salaryMax) {
-        this.salaryMax = salaryMax;
-    }
+    public LocalDate getDeadline() { return deadline; }
+    public void setDeadline(LocalDate deadline) { this.deadline = deadline; }
 
-    public LocalDate getDeadline() {
-        return deadline;
-    }
+    public JobStatus getStatus() { return status; }
+    public void setStatus(JobStatus status) { this.status = status; }
 
-    public void setDeadline(LocalDate deadline) {
-        this.deadline = deadline;
-    }
+    public String getSkills() { return skills; }
+    public void setSkills(String skills) { this.skills = skills; }
 
-    public JobStatus getStatus() {
-        return status;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setStatus(JobStatus status) {
-        this.status = status;
-    }
-
-    public String getSkills() {
-        return skills;
-    }
-
-    public void setSkills(String skills) {
-        this.skills = skills;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

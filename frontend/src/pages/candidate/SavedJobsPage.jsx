@@ -35,10 +35,14 @@ const SavedJobsPage = () => {
     }
   };
 
-  const formatSalary = (min, max) => {
-    if (!min && !max) return 'Competitive';
-    if (min && max) return `$${(min / 1000).toFixed(0)}k - $${(max / 1000).toFixed(0)}k`;
-    return min ? `$${(min / 1000).toFixed(0)}k+` : `Up to $${(max / 1000).toFixed(0)}k`;
+  const formatSalary = (job) => {
+    if (job.salaryDisclosed === false) return 'Salary not disclosed';
+    if (job.salaryText) return job.salaryText;
+    const curr = job.salaryCurrency || '$';
+    if (job.salaryMin && job.salaryMax) return `${curr}${job.salaryMin.toLocaleString()} - ${curr}${job.salaryMax.toLocaleString()}`;
+    if (job.salaryMin) return `From ${curr}${job.salaryMin.toLocaleString()}`;
+    if (job.salaryMax) return `Up to ${curr}${job.salaryMax.toLocaleString()}`;
+    return 'Salary not disclosed';
   };
 
   return (
@@ -114,7 +118,7 @@ const SavedJobsPage = () => {
                   <span className="badge badge-applied">{job.jobType.replace('_', ' ')}</span>
                   <span className="badge badge-tag">{job.experienceLevel}</span>
                   <span style={{ fontWeight: 700, color: '#0F172A' }}>
-                    {formatSalary(job.salaryMin, job.salaryMax)}
+                    {formatSalary(job)}
                   </span>
                 </div>
               </div>

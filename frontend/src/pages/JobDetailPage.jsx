@@ -143,10 +143,14 @@ const JobDetailPage = () => {
     }
   };
 
-  const formatSalary = (min, max) => {
-    if (!min && !max) return 'Competitive Compensation';
-    if (min && max) return `$${(min / 1000).toFixed(0)}k - $${(max / 1000).toFixed(0)}k / year`;
-    return min ? `From $${(min / 1000).toFixed(0)}k` : `Up to $${(max / 1000).toFixed(0)}k`;
+  const formatSalary = (job) => {
+    if (job.salaryDisclosed === false) return 'Salary not disclosed';
+    if (job.salaryText) return job.salaryText;
+    const curr = job.salaryCurrency || '$';
+    if (job.salaryMin && job.salaryMax) return `${curr}${job.salaryMin.toLocaleString()} - ${curr}${job.salaryMax.toLocaleString()}`;
+    if (job.salaryMin) return `From ${curr}${job.salaryMin.toLocaleString()}`;
+    if (job.salaryMax) return `Up to ${curr}${job.salaryMax.toLocaleString()}`;
+    return 'Salary not disclosed';
   };
 
   if (loading) {
@@ -208,7 +212,7 @@ const JobDetailPage = () => {
                   <MapPin size={16} /> {job.location}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#0F172A' }}>
-                  <DollarSign size={16} color="#10B981" /> {formatSalary(job.salaryMin, job.salaryMax)}
+                  <DollarSign size={16} color="#10B981" /> {formatSalary(job)}
                 </span>
                 {job.deadline && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -239,6 +243,15 @@ const JobDetailPage = () => {
               <div className="badge badge-selected" style={{ padding: '0.75rem 1.25rem', fontSize: '0.9rem', borderRadius: 'var(--radius-md)' }}>
                 <CheckCircle size={18} style={{ marginRight: 6 }} /> Applied
               </div>
+            ) : job.sourceUrl ? (
+              <a
+                href={job.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary btn-lg"
+              >
+                Apply on Company Website <ExternalLink size={18} style={{ marginLeft: 6 }} />
+              </a>
             ) : (
               <button
                 onClick={() => {
