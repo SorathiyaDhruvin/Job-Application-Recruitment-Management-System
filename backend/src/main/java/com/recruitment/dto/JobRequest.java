@@ -39,6 +39,7 @@ public class JobRequest {
     private Double salaryMin;
     private Double salaryMax;
     private String salaryCurrency;
+    private String salaryPeriod;
     private String salaryText;
     private Boolean salaryDisclosed;
     private LocalDate deadline;
@@ -170,6 +171,14 @@ public class JobRequest {
 
     public void setSalaryCurrency(String salaryCurrency) {
         this.salaryCurrency = salaryCurrency;
+    }
+
+    public String getSalaryPeriod() {
+        return salaryPeriod;
+    }
+
+    public void setSalaryPeriod(String salaryPeriod) {
+        this.salaryPeriod = salaryPeriod;
     }
 
     public String getSalaryText() {

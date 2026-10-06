@@ -169,11 +169,11 @@ const RegisterPage = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Phone Number</label>
+              <label className="form-label">Phone Number (India Only)</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="+1 (555) 000-0000"
+                placeholder="+91 9876543210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />

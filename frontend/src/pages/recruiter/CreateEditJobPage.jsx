@@ -24,13 +24,14 @@ const CreateEditJobPage = () => {
     salaryMin: '',
     salaryMax: '',
     salaryCurrency: 'INR',
+    salaryPeriod: 'YEAR',
     salaryText: '',
     salaryDisclosed: false,
     deadline: '',
     status: 'ACTIVE',
     skills: '',
     // Structured Location
-    country: '',
+    country: 'India',
     state: '',
     city: '',
     workMode: 'ONSITE',
@@ -54,13 +55,14 @@ const CreateEditJobPage = () => {
             experienceLevel: j.experienceLevel || 'MID',
             salaryMin: j.salaryMin || '',
             salaryMax: j.salaryMax || '',
-            salaryCurrency: j.salaryCurrency || 'INR',
+            salaryCurrency: 'INR', // Force INR
+            salaryPeriod: j.salaryPeriod || 'YEAR',
             salaryText: j.salaryText || '',
             salaryDisclosed: !!j.salaryDisclosed,
             deadline: j.deadline || '',
             status: j.status || 'ACTIVE',
             skills: j.skills || '',
-            country: j.country || '',
+            country: 'India',
             state: j.state || '',
             city: j.city || '',
             workMode: j.workMode || 'ONSITE',
@@ -95,8 +97,8 @@ const CreateEditJobPage = () => {
       return;
     }
 
-    if (formData.workMode !== 'REMOTE' && !formData.country && !formData.state && !formData.city) {
-      showToast('For non-remote roles, please provide at least a City, State, or Country.', 'error');
+    if (formData.workMode !== 'REMOTE' && !formData.state && !formData.city) {
+      showToast('For non-remote roles, please provide at least a City or State.', 'error');
       return;
     }
 
@@ -106,7 +108,8 @@ const CreateEditJobPage = () => {
         ...formData,
         salaryMin: formData.salaryMin ? Number(formData.salaryMin) : null,
         salaryMax: formData.salaryMax ? Number(formData.salaryMax) : null,
-        salaryCurrency: formData.salaryCurrency || 'INR',
+        salaryCurrency: 'INR',
+        salaryPeriod: formData.salaryPeriod || 'YEAR',
         salaryText: formData.salaryText || null,
         deadline: formData.deadline ? formData.deadline : null
       };
@@ -134,10 +137,21 @@ const CreateEditJobPage = () => {
   const getSalaryPreview = () => {
     if (!formData.salaryDisclosed) return 'Salary not disclosed';
     if (formData.salaryText) return formData.salaryText;
-    const cur = formData.salaryCurrency || 'INR';
-    if (formData.salaryMin && formData.salaryMax) return `${cur} ${formData.salaryMin} - ${cur} ${formData.salaryMax}`;
-    if (formData.salaryMin) return `From ${cur} ${formData.salaryMin}`;
-    if (formData.salaryMax) return `Up to ${cur} ${formData.salaryMax}`;
+    const cur = '₹';
+    let suffix = formData.salaryPeriod === 'MONTH' ? ' / Month' : ' LPA';
+    
+    // Quick format for preview
+    const fmt = (val) => {
+      if (formData.salaryPeriod === 'YEAR') {
+        return (val / 100000).toFixed(1).replace('.0', '');
+      } else {
+        return (val / 1000).toFixed(1).replace('.0', '') + 'K';
+      }
+    };
+
+    if (formData.salaryMin && formData.salaryMax) return `${cur}${fmt(formData.salaryMin)} - ${cur}${fmt(formData.salaryMax)}${suffix}`;
+    if (formData.salaryMin) return `From ${cur}${fmt(formData.salaryMin)}${suffix}`;
+    if (formData.salaryMax) return `Up to ${cur}${fmt(formData.salaryMax)}${suffix}`;
     return 'Salary disclosed, details missing';
   };
 
@@ -241,29 +255,37 @@ const CreateEditJobPage = () => {
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Country {formData.workMode !== 'REMOTE' && '*'}</label>
+              <label className="form-label">Country</label>
               <input
                 type="text"
                 name="country"
                 className="form-input"
-                placeholder="e.g. India"
-                value={formData.country}
-                onChange={handleChange}
-                disabled={formData.workMode === 'REMOTE'}
+                value="India"
+                disabled
               />
             </div>
             
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">State / Province</label>
-              <input
-                type="text"
-                name="state"
-                className="form-input"
-                placeholder="e.g. Karnataka"
-                value={formData.state}
-                onChange={handleChange}
-                disabled={formData.workMode === 'REMOTE'}
-              />
+              <label className="form-label">State (India)</label>
+              <select name="state" className="form-select" value={formData.state} onChange={handleChange} disabled={formData.workMode === 'REMOTE'}>
+                <option value="">Select State</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Assam">Assam</option>
+                <option value="Bihar">Bihar</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Gujarat">Gujarat</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="West Bengal">West Bengal</option>
+              </select>
             </div>
             
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -303,15 +325,11 @@ const CreateEditJobPage = () => {
           {formData.salaryDisclosed && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', background: '#F8FAFC', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Currency Code</label>
-                <input
-                  type="text"
-                  name="salaryCurrency"
-                  className="form-input"
-                  placeholder="e.g. INR, USD"
-                  value={formData.salaryCurrency}
-                  onChange={handleChange}
-                />
+                <label className="form-label">Salary Format</label>
+                <select name="salaryPeriod" className="form-select" value={formData.salaryPeriod} onChange={handleChange}>
+                  <option value="YEAR">Annual (LPA)</option>
+                  <option value="MONTH">Monthly</option>
+                </select>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>

@@ -48,6 +48,7 @@ public class JobResponse {
     private Double salaryMin;
     private Double salaryMax;
     private String salaryCurrency;
+    private String salaryPeriod;
     private String salaryText;
     private Boolean salaryDisclosed;
 
@@ -157,6 +158,9 @@ public class JobResponse {
 
     public String getSalaryCurrency() { return salaryCurrency; }
     public void setSalaryCurrency(String salaryCurrency) { this.salaryCurrency = salaryCurrency; }
+
+    public String getSalaryPeriod() { return salaryPeriod; }
+    public void setSalaryPeriod(String salaryPeriod) { this.salaryPeriod = salaryPeriod; }
 
     public String getSalaryText() { return salaryText; }
     public void setSalaryText(String salaryText) { this.salaryText = salaryText; }

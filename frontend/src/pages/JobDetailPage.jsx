@@ -154,9 +154,9 @@ const JobDetailPage = () => {
 
   const formatLocation = (job) => {
     if (job.formattedLocation) return job.formattedLocation;
-    if (job.workMode === 'REMOTE') return 'Work From Home / Remote';
-    const parts = [job.city, job.state, job.country].filter(Boolean);
-    return parts.length > 0 ? parts.join(', ') : (job.location || 'Location not specified');
+    if (job.workMode === 'REMOTE') return 'Work From Home / India';
+    const parts = [job.city, job.state, 'India'].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : (job.location || 'India');
   };
 
   const getWorkModeDisplay = (mode) => {

@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +41,22 @@ public class JobService {
         this.applicationRepository = applicationRepository;
         this.savedJobRepository = savedJobRepository;
         this.authService = authService;
+    }
+
+    @jakarta.annotation.PostConstruct
+    public void cleanupFakeData() {
+        // Remove fake non-India / non-INR jobs to adhere to requirements
+        try {
+            List<Job> allJobs = jobRepository.findAll();
+            for (Job job : allJobs) {
+                if (!"India".equalsIgnoreCase(job.getCountry()) || !"INR".equalsIgnoreCase(job.getSalaryCurrency())) {
+                    jobRepository.delete(job);
+                }
+            }
+            System.out.println("Cleaned up non-Indian/fake jobs.");
+        } catch (Exception e) {
+            System.err.println("Failed to clean up fake jobs: " + e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -167,14 +182,14 @@ public class JobService {
         job.setCompany(company);
         job.setRecruiter(currentUser);
         
-        // Structured location fields
-        job.setCountry(request.getCountry());
+        // Structured location fields (India ONLY)
+        job.setCountry("India");
         job.setState(request.getState());
         job.setCity(request.getCity());
         job.setWorkMode(request.getWorkMode());
         
         // Auto-build the flat location string from structured fields
-        job.setLocation(buildLocationString(request.getCity(), request.getState(), request.getCountry(), request.getWorkMode()));
+        job.setLocation(buildLocationString(request.getCity(), request.getState(), "India", request.getWorkMode()));
 
         job.setJobType(request.getJobType() != null ? request.getJobType() : JobType.FULL_TIME);
         job.setExperienceLevel(request.getExperienceLevel() != null ? request.getExperienceLevel() : ExperienceLevel.MID);
@@ -182,7 +197,8 @@ public class JobService {
         // Salary — set exactly what was provided, never generate
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
-        job.setSalaryCurrency(request.getSalaryCurrency());
+        job.setSalaryCurrency("INR");
+        job.setSalaryPeriod(request.getSalaryPeriod());
         job.setSalaryText(request.getSalaryText());
         job.setSalaryDisclosed(request.getSalaryDisclosed() != null ? request.getSalaryDisclosed() : false);
         
@@ -218,15 +234,15 @@ public class JobService {
         job.setResponsibilities(request.getResponsibilities());
         job.setRequirements(request.getRequirements());
         
-        // Update structured location
-        if (request.getCountry() != null) job.setCountry(request.getCountry());
+        // Update structured location (Enforce India)
+        job.setCountry("India");
         if (request.getState() != null) job.setState(request.getState());
         if (request.getCity() != null) job.setCity(request.getCity());
         if (request.getWorkMode() != null) job.setWorkMode(request.getWorkMode());
         
         // Re-compute flat location from structured fields
         job.setLocation(buildLocationString(
-            job.getCity(), job.getState(), job.getCountry(), job.getWorkMode()
+            job.getCity(), job.getState(), "India", job.getWorkMode()
         ));
 
         if (request.getJobType() != null) job.setJobType(request.getJobType());
@@ -234,7 +250,8 @@ public class JobService {
         
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
-        job.setSalaryCurrency(request.getSalaryCurrency());
+        job.setSalaryCurrency("INR");
+        if (request.getSalaryPeriod() != null) job.setSalaryPeriod(request.getSalaryPeriod());
         job.setSalaryText(request.getSalaryText());
         if (request.getSalaryDisclosed() != null) job.setSalaryDisclosed(request.getSalaryDisclosed());
         
@@ -318,40 +335,54 @@ public class JobService {
         if (job.getSalaryText() != null && !job.getSalaryText().trim().isEmpty()) {
             return job.getSalaryText();
         }
-        String curr = job.getSalaryCurrency() != null ? job.getSalaryCurrency() : "";
-        // Map common currency codes to symbols
-        String symbol = mapCurrencySymbol(curr);
+        String curr = "₹"; // Enforce INR visually as requested
+        
+        String periodSuffix = "";
+        if ("MONTH".equalsIgnoreCase(job.getSalaryPeriod())) {
+            periodSuffix = " / Month";
+        } else if ("YEAR".equalsIgnoreCase(job.getSalaryPeriod())) {
+            periodSuffix = " LPA";
+        }
 
         if (job.getSalaryMin() != null && job.getSalaryMax() != null) {
-            return symbol + formatNumber(job.getSalaryMin()) + " - " + symbol + formatNumber(job.getSalaryMax());
+            return curr + formatNumber(job.getSalaryMin(), job.getSalaryPeriod()) + " - " + curr + formatNumber(job.getSalaryMax(), job.getSalaryPeriod()) + (periodSuffix.equals(" LPA") ? "" : periodSuffix);
         }
         if (job.getSalaryMin() != null) {
-            return "From " + symbol + formatNumber(job.getSalaryMin());
+            return "From " + curr + formatNumber(job.getSalaryMin(), job.getSalaryPeriod()) + (periodSuffix.equals(" LPA") ? "" : periodSuffix);
         }
         if (job.getSalaryMax() != null) {
-            return "Up to " + symbol + formatNumber(job.getSalaryMax());
+            return "Up to " + curr + formatNumber(job.getSalaryMax(), job.getSalaryPeriod()) + (periodSuffix.equals(" LPA") ? "" : periodSuffix);
         }
         return "Salary not disclosed";
     }
 
-    private String mapCurrencySymbol(String currencyCode) {
-        if (currencyCode == null || currencyCode.isEmpty()) return "";
-        switch (currencyCode.toUpperCase()) {
-            case "USD": return "$";
-            case "INR": return "₹";
-            case "GBP": return "£";
-            case "EUR": return "€";
-            case "JPY": return "¥";
-            case "CAD": return "CA$";
-            case "AUD": return "A$";
-            default: return currencyCode + " ";
-        }
-    }
-
-    private String formatNumber(Double value) {
+    private String formatNumber(Double value, String period) {
         if (value == null) return "0";
+        
+        // For LPA (Lakhs Per Annum) format
+        if ("YEAR".equalsIgnoreCase(period)) {
+            if (value >= 1_00_000) {
+                double lakhs = value / 1_00_000;
+                // If it's a whole number, don't show decimals
+                if (lakhs == Math.floor(lakhs)) {
+                    return String.format("%.0f LPA", lakhs);
+                } else {
+                    return String.format("%.1f LPA", lakhs);
+                }
+            }
+        }
+        
+        // For Monthly / other cases
         if (value >= 1_00_000) {
-            return String.format("%,.0f", value);
+            double lakhs = value / 1_00_000;
+            return String.format("%.1fL", lakhs);
+        }
+        if (value >= 1_000) {
+            double k = value / 1_000;
+            if (k == Math.floor(k)) {
+                return String.format("%.0fK", k);
+            }
+            return String.format("%.1fK", k);
         }
         return String.format("%,.0f", value);
     }
@@ -441,6 +472,7 @@ public class JobService {
         dto.setSalaryMin(job.getSalaryMin());
         dto.setSalaryMax(job.getSalaryMax());
         dto.setSalaryCurrency(job.getSalaryCurrency());
+        dto.setSalaryPeriod(job.getSalaryPeriod());
         dto.setSalaryText(job.getSalaryText());
         dto.setSalaryDisclosed(job.getSalaryDisclosed());
         

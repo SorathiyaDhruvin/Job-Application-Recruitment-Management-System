@@ -30,8 +30,8 @@ const JobSearchPage = () => {
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [location, setLocation] = useState(searchParams.get('location') || '');
 
-  // Structured filters
-  const [country, setCountry] = useState(searchParams.get('country') || '');
+  // Structured filters (India Only)
+  const [country] = useState('India');
   const [state, setState] = useState(searchParams.get('state') || '');
   const [city, setCity] = useState(searchParams.get('city') || '');
   const [workModes, setWorkModes] = useState(() => {
@@ -130,7 +130,6 @@ const JobSearchPage = () => {
   const clearFilters = () => {
     setKeyword('');
     setLocation('');
-    setCountry('');
     setState('');
     setCity('');
     setWorkModes([]);
@@ -147,7 +146,7 @@ const JobSearchPage = () => {
   };
 
   const activeFilterCount = [
-    country, state, city,
+    state, city,
     workModes.length > 0 ? 'y' : '',
     jobTypes.length > 0 ? 'y' : '',
     experienceLevels.length > 0 ? 'y' : '',
@@ -164,9 +163,9 @@ const JobSearchPage = () => {
 
   const formatLocation = (job) => {
     if (job.formattedLocation) return job.formattedLocation;
-    if (job.workMode === 'REMOTE') return 'Work From Home / Remote';
-    const parts = [job.city, job.state, job.country].filter(Boolean);
-    return parts.length > 0 ? parts.join(', ') : (job.location || 'Location not specified');
+    if (job.workMode === 'REMOTE') return 'Work From Home / India';
+    const parts = [job.city, job.state, 'India'].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : (job.location || 'India');
   };
 
   const getJobTypeDisplay = (type) => {
@@ -245,23 +244,34 @@ const JobSearchPage = () => {
       {/* Location Filters */}
       <div style={{ marginBottom: '1.5rem' }}>
         <label className="form-label" style={{ marginBottom: '0.5rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <MapPin size={14} color="var(--text-muted)" /> Location
+          <MapPin size={14} color="var(--text-muted)" /> Location (India)
         </label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <input 
-            type="text" className="form-input" placeholder="Country (e.g. India)" 
-            value={country} onChange={(e) => setCountry(e.target.value)} 
-            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
-            style={{ padding: '0.45rem 0.7rem', fontSize: '0.85rem' }}
-          />
-          <input 
-            type="text" className="form-input" placeholder="State (e.g. Gujarat)" 
+          <select 
+            className="form-select"
             value={state} onChange={(e) => setState(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
             style={{ padding: '0.45rem 0.7rem', fontSize: '0.85rem' }}
-          />
+          >
+            <option value="">Select State</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Assam">Assam</option>
+            <option value="Bihar">Bihar</option>
+            <option value="Delhi">Delhi</option>
+            <option value="Gujarat">Gujarat</option>
+            <option value="Haryana">Haryana</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Telangana">Telangana</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+            <option value="West Bengal">West Bengal</option>
+          </select>
           <input 
-            type="text" className="form-input" placeholder="City (e.g. Vadodara)" 
+            type="text" className="form-input" placeholder="City (e.g. Bangalore)" 
             value={city} onChange={(e) => setCity(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
             style={{ padding: '0.45rem 0.7rem', fontSize: '0.85rem' }}
@@ -334,8 +344,8 @@ const JobSearchPage = () => {
     <div style={{ maxWidth: 1340, margin: '0 auto', padding: '2rem 1.5rem 3rem' }}>
       {/* Search Header */}
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '0.4rem', fontWeight: 800, color: 'var(--text-main)' }}>Explore Job Opportunities</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Find your next role with verified details from real companies.</p>
+        <h1 style={{ fontSize: '2rem', marginBottom: '0.4rem', fontWeight: 800, color: 'var(--text-main)' }}>Explore Jobs in India</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Find your next role with verified details from top Indian companies.</p>
 
         <form onSubmit={handleSearchSubmit} className="hero-search-bar" style={{ margin: '1.25rem 0 0', maxWidth: '100%' }}>
           <div className="search-input-group">
@@ -355,12 +365,12 @@ const JobSearchPage = () => {
             <MapPin size={18} color="var(--text-muted)" />
             <input
               type="text"
-              placeholder="Country, state, city, or 'Remote'"
+              placeholder="City, State, or 'Remote'"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               id="search-location-input"
             />
-            <button type="button" onClick={handleUseMyLocation} title="Use my current location"
+            <button type="button" onClick={handleUseMyLocation} title="Jobs near me"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--text-muted)', flexShrink: 0 }}>
               <Navigation size={16} />
             </button>
