@@ -3,6 +3,7 @@ package com.recruitment.dto;
 import com.recruitment.entity.ExperienceLevel;
 import com.recruitment.entity.JobStatus;
 import com.recruitment.entity.JobType;
+import com.recruitment.entity.WorkMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -20,13 +21,14 @@ public class JobRequest {
 
     private Long companyId;
 
-    @NotBlank(message = "Location is required")
+    // Location is now auto-computed from country/state/city in the service layer.
+    // Kept as optional fallback for legacy or unstructured location data.
     private String location;
 
     private String country;
     private String state;
     private String city;
-    private String workMode;
+    private WorkMode workMode;
 
     @NotNull(message = "Job type is required")
     private JobType jobType;
@@ -42,6 +44,11 @@ public class JobRequest {
     private LocalDate deadline;
     private JobStatus status = JobStatus.ACTIVE;
     private String skills;
+
+    // External source metadata
+    private String sourceUrl;
+    private String sourceName;
+    private String sourceType;
 
     public JobRequest() {}
 
@@ -117,11 +124,11 @@ public class JobRequest {
         this.city = city;
     }
 
-    public String getWorkMode() {
+    public WorkMode getWorkMode() {
         return workMode;
     }
 
-    public void setWorkMode(String workMode) {
+    public void setWorkMode(WorkMode workMode) {
         this.workMode = workMode;
     }
 
@@ -203,5 +210,29 @@ public class JobRequest {
 
     public void setSkills(String skills) {
         this.skills = skills;
+    }
+
+    public String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    public void setSourceUrl(String sourceUrl) {
+        this.sourceUrl = sourceUrl;
+    }
+
+    public String getSourceName() {
+        return sourceName;
+    }
+
+    public void setSourceName(String sourceName) {
+        this.sourceName = sourceName;
+    }
+
+    public String getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(String sourceType) {
+        this.sourceType = sourceType;
     }
 }

@@ -37,8 +37,9 @@ public class Job {
     @JoinColumn(name = "recruiter_id", nullable = false)
     private User recruiter;
 
-    @NotBlank
-    @Column(nullable = false)
+    // Auto-computed from city + state + country in the service layer.
+    // Kept for legacy compatibility and full-text search fallback.
+    @Column
     private String location;
 
     @Column(name = "country")
@@ -50,8 +51,9 @@ public class Job {
     @Column(name = "city")
     private String city;
 
-    @Column(name = "work_mode")
-    private String workMode;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_mode", length = 20)
+    private WorkMode workMode;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -83,6 +85,9 @@ public class Job {
 
     @Column(name = "source_name")
     private String sourceName;
+
+    @Column(name = "source_type")
+    private String sourceType;
 
     @Column(name = "source_published_at")
     private LocalDateTime sourcePublishedAt;
@@ -152,8 +157,8 @@ public class Job {
     public String getCity() { return city; }
     public void setCity(String city) { this.city = city; }
 
-    public String getWorkMode() { return workMode; }
-    public void setWorkMode(String workMode) { this.workMode = workMode; }
+    public WorkMode getWorkMode() { return workMode; }
+    public void setWorkMode(WorkMode workMode) { this.workMode = workMode; }
 
     public JobType getJobType() { return jobType; }
     public void setJobType(JobType jobType) { this.jobType = jobType; }
@@ -181,6 +186,9 @@ public class Job {
 
     public String getSourceName() { return sourceName; }
     public void setSourceName(String sourceName) { this.sourceName = sourceName; }
+
+    public String getSourceType() { return sourceType; }
+    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
 
     public LocalDateTime getSourcePublishedAt() { return sourcePublishedAt; }
     public void setSourcePublishedAt(LocalDateTime sourcePublishedAt) { this.sourcePublishedAt = sourcePublishedAt; }
