@@ -71,8 +71,11 @@ public class Job {
     @Column(name = "salary_max")
     private Double salaryMax;
 
-    @Column(name = "salary_currency")
-    private String salaryCurrency;
+    @Column(name = "salary_currency", length = 10)
+    private String salaryCurrency = "INR";
+
+    @Column(name = "salary_period", length = 20)
+    private String salaryPeriod;
 
     @Column(name = "salary_text")
     private String salaryText;
@@ -174,6 +177,9 @@ public class Job {
 
     public String getSalaryCurrency() { return salaryCurrency; }
     public void setSalaryCurrency(String salaryCurrency) { this.salaryCurrency = salaryCurrency; }
+
+    public String getSalaryPeriod() { return salaryPeriod; }
+    public void setSalaryPeriod(String salaryPeriod) { this.salaryPeriod = salaryPeriod; }
 
     public String getSalaryText() { return salaryText; }
     public void setSalaryText(String salaryText) { this.salaryText = salaryText; }
