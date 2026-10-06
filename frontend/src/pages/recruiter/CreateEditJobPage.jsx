@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Briefcase, ArrowLeft, Save, Sparkles, Building2 } from 'lucide-react';
+import { Briefcase, ArrowLeft, Globe, MapPin, Building2, Banknote, HelpCircle } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
@@ -13,28 +13,31 @@ const CreateEditJobPage = () => {
   const [loading, setLoading] = useState(isEditMode);
   const [saving, setSaving] = useState(false);
 
+  // Initializing state directly matching backend fields
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     responsibilities: '',
     requirements: '',
-    location: '',
     jobType: 'FULL_TIME',
     experienceLevel: 'MID',
     salaryMin: '',
     salaryMax: '',
-    salaryCurrency: 'USD',
+    salaryCurrency: 'INR',
     salaryText: '',
     salaryDisclosed: false,
     deadline: '',
     status: 'ACTIVE',
     skills: '',
+    // Structured Location
     country: '',
     state: '',
     city: '',
     workMode: 'ONSITE',
+    // External Source
     sourceUrl: '',
-    sourceName: ''
+    sourceName: '',
+    sourceType: ''
   });
 
   useEffect(() => {
@@ -47,12 +50,11 @@ const CreateEditJobPage = () => {
             description: j.description || '',
             responsibilities: j.responsibilities || '',
             requirements: j.requirements || '',
-            location: j.location || '',
             jobType: j.jobType || 'FULL_TIME',
             experienceLevel: j.experienceLevel || 'MID',
             salaryMin: j.salaryMin || '',
             salaryMax: j.salaryMax || '',
-            salaryCurrency: j.salaryCurrency || 'USD',
+            salaryCurrency: j.salaryCurrency || 'INR',
             salaryText: j.salaryText || '',
             salaryDisclosed: !!j.salaryDisclosed,
             deadline: j.deadline || '',
@@ -63,7 +65,8 @@ const CreateEditJobPage = () => {
             city: j.city || '',
             workMode: j.workMode || 'ONSITE',
             sourceUrl: j.sourceUrl || '',
-            sourceName: j.sourceName || ''
+            sourceName: j.sourceName || '',
+            sourceType: j.sourceType || ''
           });
         })
         .catch((err) => {
@@ -82,13 +85,18 @@ const CreateEditJobPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.description || !formData.location) {
-      showToast('Please fill in title, description, and location.', 'error');
+    if (!formData.title || !formData.description) {
+      showToast('Please fill in title and description.', 'error');
       return;
     }
 
     if (formData.salaryMin && formData.salaryMax && Number(formData.salaryMin) > Number(formData.salaryMax)) {
       showToast('Minimum salary cannot exceed maximum salary.', 'error');
+      return;
+    }
+
+    if (formData.workMode !== 'REMOTE' && !formData.country && !formData.state && !formData.city) {
+      showToast('For non-remote roles, please provide at least a City, State, or Country.', 'error');
       return;
     }
 
@@ -98,9 +106,8 @@ const CreateEditJobPage = () => {
         ...formData,
         salaryMin: formData.salaryMin ? Number(formData.salaryMin) : null,
         salaryMax: formData.salaryMax ? Number(formData.salaryMax) : null,
-        salaryCurrency: formData.salaryCurrency || 'USD',
+        salaryCurrency: formData.salaryCurrency || 'INR',
         salaryText: formData.salaryText || null,
-        salaryDisclosed: formData.salaryDisclosed,
         deadline: formData.deadline ? formData.deadline : null
       };
 
@@ -120,29 +127,40 @@ const CreateEditJobPage = () => {
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '4rem 0', color: '#64748B' }}>Loading job information...</div>;
+    return <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>Loading job information...</div>;
   }
 
+  // Preview Salary String
+  const getSalaryPreview = () => {
+    if (!formData.salaryDisclosed) return 'Salary not disclosed';
+    if (formData.salaryText) return formData.salaryText;
+    const cur = formData.salaryCurrency || 'INR';
+    if (formData.salaryMin && formData.salaryMax) return `${cur} ${formData.salaryMin} - ${cur} ${formData.salaryMax}`;
+    if (formData.salaryMin) return `From ${cur} ${formData.salaryMin}`;
+    if (formData.salaryMax) return `Up to ${cur} ${formData.salaryMax}`;
+    return 'Salary disclosed, details missing';
+  };
+
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '2.5rem 2rem' }}>
+    <div style={{ maxWidth: 940, margin: '0 auto', padding: '2.5rem 1.5rem' }}>
       
-      <Link to="/recruiter/jobs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#64748B', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+      <Link to="/recruiter/jobs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem', transition: 'color 0.2s' }} className="hover-text-primary">
         <ArrowLeft size={16} /> Back to Job List
       </Link>
 
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.35rem' }}>
-          {isEditMode ? 'Edit Job Opening' : 'Post a New Engineering Job'}
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.4rem', color: 'var(--text-main)' }}>
+          {isEditMode ? 'Edit Job Opening' : 'Post a New Job'}
         </h1>
-        <p style={{ color: '#64748B' }}>Define job responsibilities, skills, salary bands, and qualifications.</p>
+        <p style={{ color: 'var(--text-muted)' }}>Provide accurate, structured details to help candidates find this role.</p>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         {/* Core Attributes */}
-        <div className="card" style={{ padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem' }}>
-            Job Overview
+        <div className="card" style={{ padding: '2rem', border: '1px solid var(--border-light)' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Briefcase size={18} color="var(--primary)" /> Job Overview
           </h3>
 
           <div className="form-group">
@@ -151,16 +169,16 @@ const CreateEditJobPage = () => {
               type="text"
               name="title"
               className="form-input"
-              placeholder="e.g. Senior Full Stack Java & React Developer"
+              placeholder="e.g. Senior Full Stack Engineer"
               value={formData.title}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-            <div className="form-group">
-              <label className="form-label">Job Type *</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Employment Type *</label>
               <select name="jobType" className="form-select" value={formData.jobType} onChange={handleChange}>
                 <option value="FULL_TIME">Full Time</option>
                 <option value="PART_TIME">Part Time</option>
@@ -169,75 +187,18 @@ const CreateEditJobPage = () => {
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Work Mode *</label>
-              <select name="workMode" className="form-select" value={formData.workMode} onChange={handleChange}>
-                <option value="ONSITE">In Office</option>
-                <option value="HYBRID">Hybrid</option>
-                <option value="REMOTE">Remote (Work From Home)</option>
-              </select>
-            </div>
-
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Experience Level *</label>
               <select name="experienceLevel" className="form-select" value={formData.experienceLevel} onChange={handleChange}>
-                <option value="ENTRY">Entry Level (Fresher / 0-2 yrs)</option>
+                <option value="FRESHER">Fresher (0 yrs)</option>
+                <option value="ENTRY">Entry Level (0-2 yrs)</option>
                 <option value="MID">Mid Level (2-5 yrs)</option>
                 <option value="SENIOR">Senior Level (5-8 yrs)</option>
                 <option value="LEAD">Lead / Architect (8+ yrs)</option>
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Country *</label>
-              <input
-                type="text"
-                name="country"
-                className="form-input"
-                placeholder="e.g. India"
-                value={formData.country}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">State / Province</label>
-              <input
-                type="text"
-                name="state"
-                className="form-input"
-                placeholder="e.g. Gujarat"
-                value={formData.state}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">City</label>
-              <input
-                type="text"
-                name="city"
-                className="form-input"
-                placeholder="e.g. Vadodara"
-                value={formData.city}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Location (Raw / Fallback) *</label>
-              <input
-                type="text"
-                name="location"
-                className="form-input"
-                placeholder="e.g. San Francisco, CA / Remote"
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Posting Status</label>
               <select name="status" className="form-select" value={formData.status} onChange={handleChange}>
                 <option value="ACTIVE">Active (Accepting Applications)</option>
@@ -245,82 +206,8 @@ const CreateEditJobPage = () => {
                 <option value="DRAFT">Draft</option>
               </select>
             </div>
-          </div>
-        </div>
-
-        {/* Compensation & Timeline */}
-        <div className="card" style={{ padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem' }}>
-            Compensation &amp; Timeline
-          </h3>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600, color: '#0F172A' }}>
-                <input
-                  type="checkbox"
-                  name="salaryDisclosed"
-                  checked={formData.salaryDisclosed}
-                  onChange={handleChange}
-                  style={{ width: 16, height: 16 }}
-                />
-                Disclose Salary to Candidates
-              </label>
-            </div>
-
-            {formData.salaryDisclosed && (
-              <>
-                <div className="form-group">
-                  <label className="form-label">Currency (e.g. USD, INR, GBP)</label>
-                  <input
-                    type="text"
-                    name="salaryCurrency"
-                    className="form-input"
-                    placeholder="USD"
-                    value={formData.salaryCurrency}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Exact Text (Overrides Min/Max)</label>
-                  <input
-                    type="text"
-                    name="salaryText"
-                    className="form-input"
-                    placeholder="e.g. $120,000 - $180,000 per year"
-                    value={formData.salaryText}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Minimum Annual Salary</label>
-                  <input
-                    type="number"
-                    name="salaryMin"
-                    className="form-input"
-                    placeholder="e.g. 100000"
-                    value={formData.salaryMin}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Maximum Annual Salary</label>
-                  <input
-                    type="number"
-                    name="salaryMax"
-                    className="form-input"
-                    placeholder="e.g. 140000"
-                    value={formData.salaryMax}
-                    onChange={handleChange}
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="form-group">
+            
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Application Deadline</label>
               <input
                 type="date"
@@ -331,22 +218,165 @@ const CreateEditJobPage = () => {
               />
             </div>
           </div>
+        </div>
+
+        {/* Location Section */}
+        <div className="card" style={{ padding: '2rem', border: '1px solid var(--border-light)' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MapPin size={18} color="var(--primary)" /> Workplace & Location
+          </h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
-            <div className="form-group">
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <HelpCircle size={14} /> The location will be automatically formatted for candidates.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Work Mode *</label>
+              <select name="workMode" className="form-select" value={formData.workMode} onChange={handleChange}>
+                <option value="ONSITE">In Office</option>
+                <option value="HYBRID">Hybrid</option>
+                <option value="REMOTE">Remote (Work From Home)</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Country {formData.workMode !== 'REMOTE' && '*'}</label>
+              <input
+                type="text"
+                name="country"
+                className="form-input"
+                placeholder="e.g. India"
+                value={formData.country}
+                onChange={handleChange}
+                disabled={formData.workMode === 'REMOTE'}
+              />
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">State / Province</label>
+              <input
+                type="text"
+                name="state"
+                className="form-input"
+                placeholder="e.g. Karnataka"
+                value={formData.state}
+                onChange={handleChange}
+                disabled={formData.workMode === 'REMOTE'}
+              />
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">City</label>
+              <input
+                type="text"
+                name="city"
+                className="form-input"
+                placeholder="e.g. Bengaluru"
+                value={formData.city}
+                onChange={handleChange}
+                disabled={formData.workMode === 'REMOTE'}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Compensation */}
+        <div className="card" style={{ padding: '2rem', border: '1px solid var(--border-light)' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Banknote size={18} color="var(--primary)" /> Compensation
+          </h3>
+
+          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: 600, color: 'var(--text-main)', background: 'var(--bg-main)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+              <input
+                type="checkbox"
+                name="salaryDisclosed"
+                checked={formData.salaryDisclosed}
+                onChange={handleChange}
+                style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
+              />
+              Disclose Salary to Candidates
+            </label>
+          </div>
+
+          {formData.salaryDisclosed && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', background: '#F8FAFC', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Currency Code</label>
+                <input
+                  type="text"
+                  name="salaryCurrency"
+                  className="form-input"
+                  placeholder="e.g. INR, USD"
+                  value={formData.salaryCurrency}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Exact Text (Overrides Min/Max)</label>
+                <input
+                  type="text"
+                  name="salaryText"
+                  className="form-input"
+                  placeholder="e.g. ₹8 LPA - ₹12 LPA"
+                  value={formData.salaryText}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Minimum Annual Salary</label>
+                <input
+                  type="number"
+                  name="salaryMin"
+                  className="form-input"
+                  placeholder="e.g. 800000"
+                  value={formData.salaryMin}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Maximum Annual Salary</label>
+                <input
+                  type="number"
+                  name="salaryMax"
+                  className="form-input"
+                  placeholder="e.g. 1200000"
+                  value={formData.salaryMax}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div style={{ gridColumn: '1 / -1', fontSize: '0.85rem', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginTop: '0.5rem' }}>
+                Preview: {getSalaryPreview()}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Source & Description */}
+        <div className="card" style={{ padding: '2rem', border: '1px solid var(--border-light)' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Globe size={18} color="var(--primary)" /> Source & Details
+          </h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">External Source Name (Optional)</label>
               <input
                 type="text"
                 name="sourceName"
                 className="form-input"
-                placeholder="e.g. LinkedIn, Workday"
+                placeholder="e.g. Google Careers, Workday"
                 value={formData.sourceName}
                 onChange={handleChange}
               />
             </div>
-            
-            <div className="form-group">
-              <label className="form-label">External Source URL (Optional)</label>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">External Job / Apply URL (Optional)</label>
               <input
                 type="url"
                 name="sourceUrl"
@@ -357,13 +387,6 @@ const CreateEditJobPage = () => {
               />
             </div>
           </div>
-        </div>
-
-        {/* Required Skills & Description */}
-        <div className="card" style={{ padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem' }}>
-            Skills &amp; Detailed Description
-          </h3>
 
           <div className="form-group">
             <label className="form-label">Target Technical Skills (comma separated)</label>
@@ -371,7 +394,7 @@ const CreateEditJobPage = () => {
               type="text"
               name="skills"
               className="form-input"
-              placeholder="Java, Spring Boot, React, PostgreSQL, Docker, AWS, REST APIs"
+              placeholder="Java, Spring Boot, React, PostgreSQL"
               value={formData.skills}
               onChange={handleChange}
             />
@@ -396,19 +419,19 @@ const CreateEditJobPage = () => {
               name="responsibilities"
               className="form-textarea"
               rows={4}
-              placeholder="- Architect and implement REST APIs in Spring Boot&#10;- Optimize database schema on PostgreSQL&#10;- Lead code reviews..."
+              placeholder="- Architect and implement APIs&#10;- Optimize database queries..."
               value={formData.responsibilities}
               onChange={handleChange}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Requirements &amp; Qualifications</label>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Requirements & Qualifications</label>
             <textarea
               name="requirements"
               className="form-textarea"
               rows={4}
-              placeholder="- Bachelor's degree in Computer Science or equivalent&#10;- 2+ years of professional backend experience&#10;- Strong problem solving abilities..."
+              placeholder="- Bachelor's degree in CS&#10;- 2+ years of experience..."
               value={formData.requirements}
               onChange={handleChange}
             />
@@ -416,20 +439,24 @@ const CreateEditJobPage = () => {
         </div>
 
         {/* Action Button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-          <Link to="/recruiter/jobs" className="btn btn-secondary">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+          <Link to="/recruiter/jobs" className="btn btn-secondary btn-lg">
             Cancel
           </Link>
           <button
             type="submit"
             disabled={saving}
             className="btn btn-primary btn-lg"
+            style={{ minWidth: 200 }}
           >
-            {saving ? 'Publishing...' : isEditMode ? 'Update Job Position' : 'Publish Job Listing'}
+            {saving ? 'Saving...' : isEditMode ? 'Update Job Position' : 'Publish Job'}
           </button>
         </div>
 
       </form>
+      <style>{`
+        .hover-text-primary:hover { color: var(--primary) !important; }
+      `}</style>
     </div>
   );
 };
