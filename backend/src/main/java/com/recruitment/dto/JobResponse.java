@@ -325,7 +325,3 @@ public class JobResponse {
         this.savedByCurrentUser = savedByCurrentUser;
     }
 }
-
-    public boolean isSavedByCurrentUser() { return savedByCurrentUser; }
-    public void setSavedByCurrentUser(boolean savedByCurrentUser) { this.savedByCurrentUser = savedByCurrentUser; }
-}
