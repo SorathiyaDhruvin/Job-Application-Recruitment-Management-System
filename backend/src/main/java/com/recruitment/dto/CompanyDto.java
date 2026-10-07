@@ -7,10 +7,6 @@ public class CompanyDto {
     private String name;
     private String description;
     private String website;
-    private String domain;
-    private String industry;
-    private String headquarters;
-    private String companySize;
     private String location;
     private String logoUrl;
     private boolean verified;
@@ -49,38 +45,6 @@ public class CompanyDto {
 
     public void setWebsite(String website) {
         this.website = website;
-    }
-
-    public String getDomain() {
-        return domain;
-    }
-
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
-
-    public String getIndustry() {
-        return industry;
-    }
-
-    public void setIndustry(String industry) {
-        this.industry = industry;
-    }
-
-    public String getHeadquarters() {
-        return headquarters;
-    }
-
-    public void setHeadquarters(String headquarters) {
-        this.headquarters = headquarters;
-    }
-
-    public String getCompanySize() {
-        return companySize;
-    }
-
-    public void setCompanySize(String companySize) {
-        this.companySize = companySize;
     }
 
     public String getLocation() {

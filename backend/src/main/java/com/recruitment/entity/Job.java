@@ -37,9 +37,8 @@ public class Job {
     @JoinColumn(name = "recruiter_id", nullable = false)
     private User recruiter;
 
-    // Auto-computed from city + state + country in the service layer.
-    // Kept for legacy compatibility and full-text search fallback.
-    @Column
+    @NotBlank
+    @Column(nullable = false)
     private String location;
 
     @Column(name = "country")
@@ -51,9 +50,8 @@ public class Job {
     @Column(name = "city")
     private String city;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "work_mode", length = 20)
-    private WorkMode workMode;
+    @Column(name = "work_mode")
+    private String workMode;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -71,11 +69,8 @@ public class Job {
     @Column(name = "salary_max")
     private Double salaryMax;
 
-    @Column(name = "salary_currency", length = 10)
-    private String salaryCurrency = "INR";
-
-    @Column(name = "salary_period", length = 20)
-    private String salaryPeriod;
+    @Column(name = "salary_currency")
+    private String salaryCurrency;
 
     @Column(name = "salary_text")
     private String salaryText;
@@ -88,9 +83,6 @@ public class Job {
 
     @Column(name = "source_name")
     private String sourceName;
-
-    @Column(name = "source_type")
-    private String sourceType;
 
     @Column(name = "source_published_at")
     private LocalDateTime sourcePublishedAt;
@@ -160,8 +152,8 @@ public class Job {
     public String getCity() { return city; }
     public void setCity(String city) { this.city = city; }
 
-    public WorkMode getWorkMode() { return workMode; }
-    public void setWorkMode(WorkMode workMode) { this.workMode = workMode; }
+    public String getWorkMode() { return workMode; }
+    public void setWorkMode(String workMode) { this.workMode = workMode; }
 
     public JobType getJobType() { return jobType; }
     public void setJobType(JobType jobType) { this.jobType = jobType; }
@@ -178,9 +170,6 @@ public class Job {
     public String getSalaryCurrency() { return salaryCurrency; }
     public void setSalaryCurrency(String salaryCurrency) { this.salaryCurrency = salaryCurrency; }
 
-    public String getSalaryPeriod() { return salaryPeriod; }
-    public void setSalaryPeriod(String salaryPeriod) { this.salaryPeriod = salaryPeriod; }
-
     public String getSalaryText() { return salaryText; }
     public void setSalaryText(String salaryText) { this.salaryText = salaryText; }
 
@@ -192,9 +181,6 @@ public class Job {
 
     public String getSourceName() { return sourceName; }
     public void setSourceName(String sourceName) { this.sourceName = sourceName; }
-
-    public String getSourceType() { return sourceType; }
-    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
 
     public LocalDateTime getSourcePublishedAt() { return sourcePublishedAt; }
     public void setSourcePublishedAt(LocalDateTime sourcePublishedAt) { this.sourcePublishedAt = sourcePublishedAt; }

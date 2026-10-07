@@ -3,7 +3,6 @@ package com.recruitment.dto;
 import com.recruitment.entity.ExperienceLevel;
 import com.recruitment.entity.JobStatus;
 import com.recruitment.entity.JobType;
-import com.recruitment.entity.WorkMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -21,14 +20,13 @@ public class JobRequest {
 
     private Long companyId;
 
-    // Location is now auto-computed from country/state/city in the service layer.
-    // Kept as optional fallback for legacy or unstructured location data.
+    @NotBlank(message = "Location is required")
     private String location;
 
     private String country;
     private String state;
     private String city;
-    private WorkMode workMode;
+    private String workMode;
 
     @NotNull(message = "Job type is required")
     private JobType jobType;
@@ -39,17 +37,11 @@ public class JobRequest {
     private Double salaryMin;
     private Double salaryMax;
     private String salaryCurrency;
-    private String salaryPeriod;
     private String salaryText;
     private Boolean salaryDisclosed;
     private LocalDate deadline;
     private JobStatus status = JobStatus.ACTIVE;
     private String skills;
-
-    // External source metadata
-    private String sourceUrl;
-    private String sourceName;
-    private String sourceType;
 
     public JobRequest() {}
 
@@ -125,11 +117,11 @@ public class JobRequest {
         this.city = city;
     }
 
-    public WorkMode getWorkMode() {
+    public String getWorkMode() {
         return workMode;
     }
 
-    public void setWorkMode(WorkMode workMode) {
+    public void setWorkMode(String workMode) {
         this.workMode = workMode;
     }
 
@@ -173,14 +165,6 @@ public class JobRequest {
         this.salaryCurrency = salaryCurrency;
     }
 
-    public String getSalaryPeriod() {
-        return salaryPeriod;
-    }
-
-    public void setSalaryPeriod(String salaryPeriod) {
-        this.salaryPeriod = salaryPeriod;
-    }
-
     public String getSalaryText() {
         return salaryText;
     }
@@ -219,29 +203,5 @@ public class JobRequest {
 
     public void setSkills(String skills) {
         this.skills = skills;
-    }
-
-    public String getSourceUrl() {
-        return sourceUrl;
-    }
-
-    public void setSourceUrl(String sourceUrl) {
-        this.sourceUrl = sourceUrl;
-    }
-
-    public String getSourceName() {
-        return sourceName;
-    }
-
-    public void setSourceName(String sourceName) {
-        this.sourceName = sourceName;
-    }
-
-    public String getSourceType() {
-        return sourceType;
-    }
-
-    public void setSourceType(String sourceType) {
-        this.sourceType = sourceType;
     }
 }

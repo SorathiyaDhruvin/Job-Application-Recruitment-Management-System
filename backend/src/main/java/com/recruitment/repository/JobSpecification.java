@@ -4,7 +4,6 @@ import com.recruitment.entity.ExperienceLevel;
 import com.recruitment.entity.Job;
 import com.recruitment.entity.JobStatus;
 import com.recruitment.entity.JobType;
-import com.recruitment.entity.WorkMode;
 import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.Predicate;
@@ -47,26 +46,17 @@ public class JobSpecification {
                 predicates.add(criteriaBuilder.or(titlePredicate, descPredicate, skillsPredicate, companyNamePredicate));
             }
 
-            // General location search — matches across all structured fields plus workMode for "remote"
             if (location != null && !location.trim().isEmpty()) {
                 String likeLocation = "%" + location.trim().toLowerCase() + "%";
-                String trimmedLocation = location.trim().toLowerCase();
-
-                List<Predicate> locationPredicates = new ArrayList<>();
-                locationPredicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("location")), likeLocation));
-                locationPredicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("country")), likeLocation));
-                locationPredicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("state")), likeLocation));
-                locationPredicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("city")), likeLocation));
-
-                // Allow "remote", "work from home", "wfh" to match REMOTE work mode
-                if (trimmedLocation.contains("remote") || trimmedLocation.contains("work from home") || trimmedLocation.contains("wfh")) {
-                    locationPredicates.add(criteriaBuilder.equal(root.get("workMode"), WorkMode.REMOTE));
-                }
-
-                predicates.add(criteriaBuilder.or(locationPredicates.toArray(new Predicate[0])));
+                Predicate locPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("location")), likeLocation);
+                Predicate countryPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("country")), likeLocation);
+                Predicate statePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("state")), likeLocation);
+                Predicate cityPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("city")), likeLocation);
+                Predicate workModePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("workMode")), likeLocation);
+                
+                predicates.add(criteriaBuilder.or(locPredicate, countryPredicate, statePredicate, cityPredicate, workModePredicate));
             }
 
-            // Structured location filters (exact match)
             if (country != null && !country.trim().isEmpty()) {
                 predicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("country")), country.trim().toLowerCase()));
             }
@@ -79,14 +69,8 @@ public class JobSpecification {
                 predicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("city")), city.trim().toLowerCase()));
             }
 
-            // Work mode filter (uses enum)
             if (workMode != null && !workMode.trim().isEmpty()) {
-                try {
-                    WorkMode mode = WorkMode.valueOf(workMode.trim().toUpperCase());
-                    predicates.add(criteriaBuilder.equal(root.get("workMode"), mode));
-                } catch (IllegalArgumentException ignored) {
-                    // Invalid work mode value, skip filter
-                }
+                predicates.add(criteriaBuilder.equal(root.get("workMode"), workMode.trim()));
             }
 
             if (jobType != null) {

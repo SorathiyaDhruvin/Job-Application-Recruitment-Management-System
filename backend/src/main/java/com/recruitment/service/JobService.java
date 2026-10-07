@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,22 +42,6 @@ public class JobService {
         this.authService = authService;
     }
 
-    @jakarta.annotation.PostConstruct
-    public void cleanupFakeData() {
-        // Remove fake non-India / non-INR jobs to adhere to requirements
-        try {
-            List<Job> allJobs = jobRepository.findAll();
-            for (Job job : allJobs) {
-                if (!"India".equalsIgnoreCase(job.getCountry()) || !"INR".equalsIgnoreCase(job.getSalaryCurrency())) {
-                    jobRepository.delete(job);
-                }
-            }
-            System.out.println("Cleaned up non-Indian/fake jobs.");
-        } catch (Exception e) {
-            System.err.println("Failed to clean up fake jobs: " + e.getMessage());
-        }
-    }
-
     @Transactional(readOnly = true)
     public List<JobResponse> searchJobs(
             String keyword,
@@ -79,26 +62,19 @@ public class JobService {
             keyword, location, country, state, city, workMode, jobType, experienceLevel, salaryDisclosed, effectiveStatus
         );
 
-        // Default sort by newest
         org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
-        
-        // For salary sorts, we need to handle nulls properly, so we use in-memory sorting after fetch
-        boolean salarySort = false;
-        boolean salaryDesc = false;
-
         if (sortBy != null) {
             switch (sortBy.toLowerCase()) {
                 case "deadline":
                     sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "deadline");
                     break;
                 case "salary_desc":
-                    salarySort = true;
-                    salaryDesc = true;
+                    sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "salaryMax");
                     break;
                 case "salary_asc":
-                    salarySort = true;
-                    salaryDesc = false;
+                    sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "salaryMin");
                     break;
+                // 'relevance' can just default to newest for now, or text search rank, but DB doesn't support easy rank sorting natively without native query.
                 default:
                     sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt");
                     break;
@@ -106,25 +82,6 @@ public class JobService {
         }
 
         List<Job> jobs = jobRepository.findAll(spec, sort);
-
-        // Handle salary sorting with proper null handling:
-        // Jobs with undisclosed/null salary go to the bottom, never treated as zero.
-        if (salarySort) {
-            final boolean descending = salaryDesc;
-            jobs = new ArrayList<>(jobs);
-            jobs.sort((a, b) -> {
-                Double aVal = descending ? a.getSalaryMax() : a.getSalaryMin();
-                Double bVal = descending ? b.getSalaryMax() : b.getSalaryMin();
-                boolean aNull = (aVal == null || Boolean.FALSE.equals(a.getSalaryDisclosed()));
-                boolean bNull = (bVal == null || Boolean.FALSE.equals(b.getSalaryDisclosed()));
-
-                if (aNull && bNull) return 0;
-                if (aNull) return 1;  // nulls go last
-                if (bNull) return -1;
-
-                return descending ? Double.compare(bVal, aVal) : Double.compare(aVal, bVal);
-            });
-        }
 
         Long currentCandidateId = getCurrentCandidateUserIdOrNull();
 
@@ -181,35 +138,21 @@ public class JobService {
         job.setRequirements(request.getRequirements());
         job.setCompany(company);
         job.setRecruiter(currentUser);
-        
-        // Structured location fields (India ONLY)
-        job.setCountry("India");
+        job.setLocation(request.getLocation());
+        job.setCountry(request.getCountry());
         job.setState(request.getState());
         job.setCity(request.getCity());
         job.setWorkMode(request.getWorkMode());
-        
-        // Auto-build the flat location string from structured fields
-        job.setLocation(buildLocationString(request.getCity(), request.getState(), "India", request.getWorkMode()));
-
         job.setJobType(request.getJobType() != null ? request.getJobType() : JobType.FULL_TIME);
         job.setExperienceLevel(request.getExperienceLevel() != null ? request.getExperienceLevel() : ExperienceLevel.MID);
-        
-        // Salary — set exactly what was provided, never generate
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
-        job.setSalaryCurrency("INR");
-        job.setSalaryPeriod(request.getSalaryPeriod());
+        job.setSalaryCurrency(request.getSalaryCurrency());
         job.setSalaryText(request.getSalaryText());
         job.setSalaryDisclosed(request.getSalaryDisclosed() != null ? request.getSalaryDisclosed() : false);
-        
         job.setDeadline(request.getDeadline());
         job.setStatus(request.getStatus() != null ? request.getStatus() : JobStatus.ACTIVE);
         job.setSkills(request.getSkills());
-
-        // Source metadata
-        job.setSourceUrl(request.getSourceUrl());
-        job.setSourceName(request.getSourceName());
-        job.setSourceType(request.getSourceType());
 
         Job saved = jobRepository.save(job);
         return mapToDto(saved, null);
@@ -233,36 +176,21 @@ public class JobService {
         job.setDescription(request.getDescription());
         job.setResponsibilities(request.getResponsibilities());
         job.setRequirements(request.getRequirements());
-        
-        // Update structured location (Enforce India)
-        job.setCountry("India");
+        job.setLocation(request.getLocation());
+        if (request.getCountry() != null) job.setCountry(request.getCountry());
         if (request.getState() != null) job.setState(request.getState());
         if (request.getCity() != null) job.setCity(request.getCity());
         if (request.getWorkMode() != null) job.setWorkMode(request.getWorkMode());
-        
-        // Re-compute flat location from structured fields
-        job.setLocation(buildLocationString(
-            job.getCity(), job.getState(), "India", job.getWorkMode()
-        ));
-
         if (request.getJobType() != null) job.setJobType(request.getJobType());
         if (request.getExperienceLevel() != null) job.setExperienceLevel(request.getExperienceLevel());
-        
         job.setSalaryMin(request.getSalaryMin());
         job.setSalaryMax(request.getSalaryMax());
-        job.setSalaryCurrency("INR");
-        if (request.getSalaryPeriod() != null) job.setSalaryPeriod(request.getSalaryPeriod());
+        job.setSalaryCurrency(request.getSalaryCurrency());
         job.setSalaryText(request.getSalaryText());
         if (request.getSalaryDisclosed() != null) job.setSalaryDisclosed(request.getSalaryDisclosed());
-        
         job.setDeadline(request.getDeadline());
         if (request.getStatus() != null) job.setStatus(request.getStatus());
         job.setSkills(request.getSkills());
-
-        // Source metadata
-        if (request.getSourceUrl() != null) job.setSourceUrl(request.getSourceUrl());
-        if (request.getSourceName() != null) job.setSourceName(request.getSourceName());
-        if (request.getSourceType() != null) job.setSourceType(request.getSourceType());
 
         Job updated = jobRepository.save(job);
         return mapToDto(updated, null);
@@ -297,136 +225,6 @@ public class JobService {
                 .collect(Collectors.toList());
     }
 
-    // ========================
-    // Helper: Build Location String
-    // ========================
-
-    /**
-     * Auto-builds the flat location string from structured city/state/country fields.
-     * For REMOTE jobs: returns "Remote".
-     * For others: "City, State, Country" (omitting empty parts).
-     * This is stored in the `location` column for backward compatibility and full-text search.
-     */
-    private String buildLocationString(String city, String state, String country, WorkMode workMode) {
-        if (workMode == WorkMode.REMOTE) {
-            return "Remote";
-        }
-
-        List<String> parts = new ArrayList<>();
-        if (city != null && !city.trim().isEmpty()) parts.add(city.trim());
-        if (state != null && !state.trim().isEmpty()) parts.add(state.trim());
-        if (country != null && !country.trim().isEmpty()) parts.add(country.trim());
-        
-        return parts.isEmpty() ? "Location not specified" : String.join(", ", parts);
-    }
-
-    // ========================
-    // Helper: Format Salary Display
-    // ========================
-
-    /**
-     * Formats salary for display based on REAL data from the job source.
-     * NEVER generates, estimates, or calculates salary.
-     */
-    private String formatSalaryDisplay(Job job) {
-        if (Boolean.FALSE.equals(job.getSalaryDisclosed()) || job.getSalaryDisclosed() == null) {
-            return "Salary not disclosed";
-        }
-        if (job.getSalaryText() != null && !job.getSalaryText().trim().isEmpty()) {
-            return job.getSalaryText();
-        }
-        String curr = "₹"; // Enforce INR visually as requested
-        
-        String periodSuffix = "";
-        if ("MONTH".equalsIgnoreCase(job.getSalaryPeriod())) {
-            periodSuffix = " / Month";
-        } else if ("YEAR".equalsIgnoreCase(job.getSalaryPeriod())) {
-            periodSuffix = " LPA";
-        }
-
-        if (job.getSalaryMin() != null && job.getSalaryMax() != null) {
-            return curr + formatNumber(job.getSalaryMin(), job.getSalaryPeriod()) + " - " + curr + formatNumber(job.getSalaryMax(), job.getSalaryPeriod()) + (periodSuffix.equals(" LPA") ? "" : periodSuffix);
-        }
-        if (job.getSalaryMin() != null) {
-            return "From " + curr + formatNumber(job.getSalaryMin(), job.getSalaryPeriod()) + (periodSuffix.equals(" LPA") ? "" : periodSuffix);
-        }
-        if (job.getSalaryMax() != null) {
-            return "Up to " + curr + formatNumber(job.getSalaryMax(), job.getSalaryPeriod()) + (periodSuffix.equals(" LPA") ? "" : periodSuffix);
-        }
-        return "Salary not disclosed";
-    }
-
-    private String formatNumber(Double value, String period) {
-        if (value == null) return "0";
-        
-        // For LPA (Lakhs Per Annum) format
-        if ("YEAR".equalsIgnoreCase(period)) {
-            if (value >= 1_00_000) {
-                double lakhs = value / 1_00_000;
-                // If it's a whole number, don't show decimals
-                if (lakhs == Math.floor(lakhs)) {
-                    return String.format("%.0f LPA", lakhs);
-                } else {
-                    return String.format("%.1f LPA", lakhs);
-                }
-            }
-        }
-        
-        // For Monthly / other cases
-        if (value >= 1_00_000) {
-            double lakhs = value / 1_00_000;
-            return String.format("%.1fL", lakhs);
-        }
-        if (value >= 1_000) {
-            double k = value / 1_000;
-            if (k == Math.floor(k)) {
-                return String.format("%.0fK", k);
-            }
-            return String.format("%.1fK", k);
-        }
-        return String.format("%,.0f", value);
-    }
-
-    // ========================
-    // Helper: Format Location Display
-    // ========================
-
-    private String formatLocationDisplay(Job job) {
-        if (job.getWorkMode() == WorkMode.REMOTE) {
-            return "Work From Home / Remote";
-        }
-
-        List<String> parts = new ArrayList<>();
-        if (job.getCity() != null && !job.getCity().trim().isEmpty()) parts.add(job.getCity().trim());
-        if (job.getState() != null && !job.getState().trim().isEmpty()) parts.add(job.getState().trim());
-        if (job.getCountry() != null && !job.getCountry().trim().isEmpty()) parts.add(job.getCountry().trim());
-
-        if (!parts.isEmpty()) {
-            return String.join(", ", parts);
-        }
-
-        // Fallback to raw location field
-        if (job.getLocation() != null && !job.getLocation().trim().isEmpty()) {
-            return job.getLocation();
-        }
-
-        return "Location not specified";
-    }
-
-    private String getWorkModeDisplayText(WorkMode workMode) {
-        if (workMode == null) return null;
-        switch (workMode) {
-            case REMOTE: return "Work From Home";
-            case HYBRID: return "Hybrid";
-            case ONSITE: return "In Office";
-            default: return workMode.name();
-        }
-    }
-
-    // ========================
-    // Helper: Auth
-    // ========================
-
     private Long getCurrentCandidateUserIdOrNull() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -441,10 +239,6 @@ public class JobService {
         return null;
     }
 
-    // ========================
-    // DTO Mapper
-    // ========================
-
     public JobResponse mapToDto(Job job, Long currentCandidateId) {
         JobResponse dto = new JobResponse();
         dto.setId(job.getId());
@@ -452,53 +246,33 @@ public class JobService {
         dto.setDescription(job.getDescription());
         dto.setResponsibilities(job.getResponsibilities());
         dto.setRequirements(job.getRequirements());
-        
-        // Structured location fields
         dto.setLocation(job.getLocation());
         dto.setCountry(job.getCountry());
         dto.setState(job.getState());
         dto.setCity(job.getCity());
         dto.setWorkMode(job.getWorkMode());
-        
-        // Computed display fields — these are derived server-side for consistent display
-        dto.setFormattedLocation(formatLocationDisplay(job));
-        dto.setFormattedSalary(formatSalaryDisplay(job));
-        dto.setWorkModeDisplay(getWorkModeDisplayText(job.getWorkMode()));
-
         dto.setJobType(job.getJobType());
         dto.setExperienceLevel(job.getExperienceLevel());
-        
-        // Raw salary fields (for client-side formatting if needed)
         dto.setSalaryMin(job.getSalaryMin());
         dto.setSalaryMax(job.getSalaryMax());
         dto.setSalaryCurrency(job.getSalaryCurrency());
-        dto.setSalaryPeriod(job.getSalaryPeriod());
         dto.setSalaryText(job.getSalaryText());
         dto.setSalaryDisclosed(job.getSalaryDisclosed());
-        
-        // Source metadata
         dto.setSourceUrl(job.getSourceUrl());
         dto.setSourceName(job.getSourceName());
-        dto.setSourceType(job.getSourceType());
         dto.setSourcePublishedAt(job.getSourcePublishedAt());
         dto.setLastVerifiedAt(job.getLastVerifiedAt());
-        
         dto.setDeadline(job.getDeadline());
         dto.setStatus(job.getStatus());
         dto.setSkills(job.getSkills());
         dto.setCreatedAt(job.getCreatedAt());
         dto.setUpdatedAt(job.getUpdatedAt());
 
-        // Company details (from the actual company entity — never generated)
         if (job.getCompany() != null) {
             dto.setCompanyId(job.getCompany().getId());
             dto.setCompanyName(job.getCompany().getName());
             dto.setCompanyLogoUrl(job.getCompany().getLogoUrl());
             dto.setCompanyWebsite(job.getCompany().getWebsite());
-            dto.setCompanyIndustry(job.getCompany().getIndustry());
-            dto.setCompanyHeadquarters(job.getCompany().getHeadquarters());
-            dto.setCompanySize(job.getCompany().getCompanySize());
-            dto.setCompanyDomain(job.getCompany().getDomain());
         }
 
         if (job.getRecruiter() != null) {
