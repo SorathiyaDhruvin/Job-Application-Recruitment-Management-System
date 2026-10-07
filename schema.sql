@@ -8,7 +8,13 @@ CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('CANDIDATE', 'RECRUITER', 'ADMIN')),
+    role VARCHAR(20) NOT NULL CHECK (
+        role IN (
+            'CANDIDATE',
+            'RECRUITER',
+            'ADMIN'
+        )
+    ),
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -20,10 +26,6 @@ CREATE TABLE IF NOT EXISTS companies (
     name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     website VARCHAR(255),
-    domain VARCHAR(255),
-    industry VARCHAR(255),
-    headquarters VARCHAR(255),
-    company_size VARCHAR(100),
     location VARCHAR(255),
     logo_url VARCHAR(500),
     is_verified BOOLEAN NOT NULL DEFAULT TRUE,
@@ -33,7 +35,7 @@ CREATE TABLE IF NOT EXISTS companies (
 -- 3. Candidate Profiles Table
 CREATE TABLE IF NOT EXISTS candidate_profiles (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES users (id) ON DELETE CASCADE,
     full_name VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     location VARCHAR(255),
@@ -59,11 +61,11 @@ CREATE TABLE IF NOT EXISTS candidate_profiles (
 -- 4. Recruiter Profiles Table
 CREATE TABLE IF NOT EXISTS recruiter_profiles (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES users (id) ON DELETE CASCADE,
     full_name VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     designation VARCHAR(255),
-    company_id BIGINT REFERENCES companies(id) ON DELETE SET NULL,
+    company_id BIGINT REFERENCES companies (id) ON DELETE SET NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -74,28 +76,32 @@ CREATE TABLE IF NOT EXISTS jobs (
     description TEXT NOT NULL,
     responsibilities TEXT,
     requirements TEXT,
-    company_id BIGINT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    recruiter_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    location VARCHAR(255),
-    country VARCHAR(100),
-    state VARCHAR(100),
-    city VARCHAR(100),
-    work_mode VARCHAR(20) CHECK (work_mode IN ('REMOTE', 'HYBRID', 'ONSITE')),
-    job_type VARCHAR(30) NOT NULL CHECK (job_type IN ('FULL_TIME', 'PART_TIME', 'INTERNSHIP', 'CONTRACT')),
-    experience_level VARCHAR(30) NOT NULL CHECK (experience_level IN ('FRESHER', 'ENTRY', 'MID', 'SENIOR', 'LEAD')),
+    company_id BIGINT NOT NULL REFERENCES companies (id) ON DELETE CASCADE,
+    recruiter_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    location VARCHAR(255) NOT NULL,
+    job_type VARCHAR(30) NOT NULL CHECK (
+        job_type IN (
+            'FULL_TIME',
+            'PART_TIME',
+            'REMOTE',
+            'INTERNSHIP',
+            'CONTRACT'
+        )
+    ),
+    experience_level VARCHAR(30) NOT NULL CHECK (
+        experience_level IN (
+            'ENTRY',
+            'MID',
+            'SENIOR',
+            'LEAD'
+        )
+    ),
     salary_min NUMERIC(12, 2),
     salary_max NUMERIC(12, 2),
-    salary_currency VARCHAR(10) DEFAULT 'INR',
-    salary_period VARCHAR(20) CHECK (salary_period IN ('YEAR', 'MONTH', 'HOUR')),
-    salary_text VARCHAR(500),
-    salary_disclosed BOOLEAN DEFAULT FALSE,
-    source_url VARCHAR(1000),
-    source_name VARCHAR(255),
-    source_type VARCHAR(100),
-    source_published_at TIMESTAMP,
-    last_verified_at TIMESTAMP,
     deadline DATE,
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'CLOSED', 'DRAFT')),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (
+        status IN ('ACTIVE', 'CLOSED', 'DRAFT')
+    ),
     skills TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -104,11 +110,20 @@ CREATE TABLE IF NOT EXISTS jobs (
 -- 6. Applications Table
 CREATE TABLE IF NOT EXISTS applications (
     id BIGSERIAL PRIMARY KEY,
-    job_id BIGINT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
-    candidate_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    job_id BIGINT NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
+    candidate_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     resume_file_name VARCHAR(255),
     cover_letter TEXT,
-    status VARCHAR(30) NOT NULL DEFAULT 'APPLIED' CHECK (status IN ('APPLIED', 'UNDER_REVIEW', 'SHORTLISTED', 'INTERVIEW', 'SELECTED', 'REJECTED')),
+    status VARCHAR(30) NOT NULL DEFAULT 'APPLIED' CHECK (
+        status IN (
+            'APPLIED',
+            'UNDER_REVIEW',
+            'SHORTLISTED',
+            'INTERVIEW',
+            'SELECTED',
+            'REJECTED'
+        )
+    ),
     recruiter_notes TEXT,
     applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -118,10 +133,10 @@ CREATE TABLE IF NOT EXISTS applications (
 -- 7. Application Status History Table
 CREATE TABLE IF NOT EXISTS application_status_history (
     id BIGSERIAL PRIMARY KEY,
-    application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+    application_id BIGINT NOT NULL REFERENCES applications (id) ON DELETE CASCADE,
     from_status VARCHAR(30),
     to_status VARCHAR(30) NOT NULL,
-    changed_by_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    changed_by_user_id BIGINT REFERENCES users (id) ON DELETE SET NULL,
     notes TEXT,
     changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -129,8 +144,8 @@ CREATE TABLE IF NOT EXISTS application_status_history (
 -- 8. Saved Jobs Table
 CREATE TABLE IF NOT EXISTS saved_jobs (
     id BIGSERIAL PRIMARY KEY,
-    candidate_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    job_id BIGINT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+    candidate_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    job_id BIGINT NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
     saved_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_saved_job_candidate UNIQUE (candidate_id, job_id)
 );
@@ -138,7 +153,7 @@ CREATE TABLE IF NOT EXISTS saved_jobs (
 -- 9. Candidate Projects Table
 CREATE TABLE IF NOT EXISTS candidate_projects (
     id BIGSERIAL PRIMARY KEY,
-    candidate_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    candidate_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     project_url VARCHAR(500),
@@ -147,17 +162,18 @@ CREATE TABLE IF NOT EXISTS candidate_projects (
 );
 
 -- Indexes for Optimal Query Performance
-CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
-CREATE INDEX IF NOT EXISTS idx_jobs_company ON jobs(company_id);
-CREATE INDEX IF NOT EXISTS idx_jobs_recruiter ON jobs(recruiter_id);
-CREATE INDEX IF NOT EXISTS idx_jobs_country ON jobs(country);
-CREATE INDEX IF NOT EXISTS idx_jobs_state ON jobs(state);
-CREATE INDEX IF NOT EXISTS idx_jobs_city ON jobs(city);
-CREATE INDEX IF NOT EXISTS idx_jobs_work_mode ON jobs(work_mode);
-CREATE INDEX IF NOT EXISTS idx_jobs_job_type ON jobs(job_type);
-CREATE INDEX IF NOT EXISTS idx_jobs_experience_level ON jobs(experience_level);
-CREATE INDEX IF NOT EXISTS idx_jobs_salary_disclosed ON jobs(salary_disclosed);
-CREATE INDEX IF NOT EXISTS idx_applications_candidate ON applications(candidate_id);
-CREATE INDEX IF NOT EXISTS idx_applications_job ON applications(job_id);
-CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
-CREATE INDEX IF NOT EXISTS idx_status_history_application ON application_status_history(application_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs (status);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_company ON jobs (company_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_recruiter ON jobs (recruiter_id);
+
+CREATE INDEX IF NOT EXISTS idx_applications_candidate ON applications (candidate_id);
+
+CREATE INDEX IF NOT EXISTS idx_applications_job ON applications (job_id);
+
+CREATE INDEX IF NOT EXISTS idx_applications_status ON applications (status);
+
+CREATE INDEX IF NOT EXISTS idx_status_history_application ON application_status_history (application_id);
+
+CREATE INDEX IF NOT EXISTS idx_status_history_application ON application_status_history (application_id);

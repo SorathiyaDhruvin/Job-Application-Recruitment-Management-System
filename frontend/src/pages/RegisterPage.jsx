@@ -67,7 +67,7 @@ const RegisterPage = () => {
       background: 'radial-gradient(ellipse at top, rgba(26, 53, 87, 0.06), transparent 60%)'
     }}>
       <div style={{ maxWidth: 520, width: '100%' }}>
-        
+
         {/* Brand header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{
@@ -169,11 +169,11 @@ const RegisterPage = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Phone Number (India Only)</label>
+              <label className="form-label">Phone Number</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="+91 9876543210"
+                placeholder="+1 (555) 000-0000"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />

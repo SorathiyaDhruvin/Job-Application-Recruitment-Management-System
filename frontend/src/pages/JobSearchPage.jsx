@@ -1,21 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { 
-  Search, 
-  MapPin, 
-  Briefcase, 
-  Building2, 
-  Bookmark, 
-  Clock, 
+import {
+  Search,
+  MapPin,
+  Briefcase,
+  Building2,
+  Bookmark,
+  DollarSign,
+  Clock,
   CheckCircle,
   SlidersHorizontal,
-  ChevronRight,
-  X,
-  Navigation,
-  Globe,
-  Calendar,
-  TrendingUp,
-  Banknote
+  ChevronRight
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -26,34 +21,21 @@ const JobSearchPage = () => {
   const { isAuthenticated, isCandidate } = useAuth();
   const { showToast } = useToast();
 
-  // Search inputs
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [location, setLocation] = useState(searchParams.get('location') || '');
-
-  // Structured filters (India Only)
-  const [country] = useState('India');
+  const [country, setCountry] = useState(searchParams.get('country') || '');
   const [state, setState] = useState(searchParams.get('state') || '');
   const [city, setCity] = useState(searchParams.get('city') || '');
-  const [workModes, setWorkModes] = useState(() => {
-    const wm = searchParams.get('workMode');
-    return wm ? [wm] : [];
-  });
-  const [jobTypes, setJobTypes] = useState(() => {
-    const jt = searchParams.get('jobType');
-    return jt ? [jt] : [];
-  });
-  const [experienceLevels, setExperienceLevels] = useState(() => {
-    const el = searchParams.get('experienceLevel');
-    return el ? [el] : [];
-  });
+  const [workMode, setWorkMode] = useState(searchParams.get('workMode') || '');
+  const [jobType, setJobType] = useState(searchParams.get('jobType') || '');
+  const [experienceLevel, setExperienceLevel] = useState(searchParams.get('experienceLevel') || '');
   const [salaryDisclosed, setSalaryDisclosed] = useState(searchParams.get('salaryDisclosed') || '');
   const [sortBy, setSortBy] = useState('newest');
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -62,39 +44,25 @@ const JobSearchPage = () => {
       if (country) params.append('country', country);
       if (state) params.append('state', state);
       if (city) params.append('city', city);
-      // Send first selected work mode (API takes single value)
-      if (workModes.length === 1) params.append('workMode', workModes[0]);
-      if (jobTypes.length === 1) params.append('jobType', jobTypes[0]);
-      if (experienceLevels.length === 1) params.append('experienceLevel', experienceLevels[0]);
+      if (workMode) params.append('workMode', workMode);
+      if (jobType) params.append('jobType', jobType);
+      if (experienceLevel) params.append('experienceLevel', experienceLevel);
       if (salaryDisclosed) params.append('salaryDisclosed', salaryDisclosed);
       if (sortBy) params.append('sortBy', sortBy);
 
       const res = await api.get(`/jobs?${params.toString()}`);
-      let jobData = res.data.data || [];
-
-      // Client-side multi-filter if multiple checkboxes selected
-      if (workModes.length > 1) {
-        jobData = jobData.filter(j => workModes.includes(j.workMode));
-      }
-      if (jobTypes.length > 1) {
-        jobData = jobData.filter(j => jobTypes.includes(j.jobType));
-      }
-      if (experienceLevels.length > 1) {
-        jobData = jobData.filter(j => experienceLevels.includes(j.experienceLevel));
-      }
-
-      setJobs(jobData);
+      setJobs(res.data.data || []);
     } catch (err) {
       console.error('Failed to load jobs:', err);
       showToast('Error loading jobs. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
-  }, [keyword, location, country, state, city, workModes, jobTypes, experienceLevels, salaryDisclosed, sortBy]);
+  };
 
   useEffect(() => {
     fetchJobs();
-  }, [workModes, jobTypes, experienceLevels, salaryDisclosed, sortBy]);
+  }, [jobType, experienceLevel, workMode, salaryDisclosed, sortBy]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -130,250 +98,85 @@ const JobSearchPage = () => {
   const clearFilters = () => {
     setKeyword('');
     setLocation('');
+    setCountry('');
     setState('');
     setCity('');
-    setWorkModes([]);
-    setJobTypes([]);
-    setExperienceLevels([]);
+    setWorkMode('');
+    setJobType('');
+    setExperienceLevel('');
     setSalaryDisclosed('');
     setSortBy('newest');
     setSearchParams({});
+    // fetchJobs will be called via useEffect or we can call it manually
     setTimeout(() => fetchJobs(), 100);
   };
 
-  const toggleCheckbox = (arr, setArr, value) => {
-    setArr(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
-  };
-
-  const activeFilterCount = [
-    state, city,
-    workModes.length > 0 ? 'y' : '',
-    jobTypes.length > 0 ? 'y' : '',
-    experienceLevels.length > 0 ? 'y' : '',
-    salaryDisclosed,
-  ].filter(Boolean).length;
-
-  // Display helpers — use server-computed fields when available
   const formatSalary = (job) => {
-    if (job.formattedSalary) return job.formattedSalary;
     if (job.salaryDisclosed === false) return 'Salary not disclosed';
     if (job.salaryText) return job.salaryText;
+    const curr = job.salaryCurrency || '$';
+    if (job.salaryMin && job.salaryMax) return `${curr}${job.salaryMin.toLocaleString()} - ${curr}${job.salaryMax.toLocaleString()}`;
+    if (job.salaryMin) return `From ${curr}${job.salaryMin.toLocaleString()}`;
+    if (job.salaryMax) return `Up to ${curr}${job.salaryMax.toLocaleString()}`;
     return 'Salary not disclosed';
   };
 
   const formatLocation = (job) => {
-    if (job.formattedLocation) return job.formattedLocation;
-    if (job.workMode === 'REMOTE') return 'Work From Home / India';
-    const parts = [job.city, job.state, 'India'].filter(Boolean);
-    return parts.length > 0 ? parts.join(', ') : (job.location || 'India');
+    if (job.workMode === 'REMOTE') return 'Work From Home';
+    const locArr = [];
+    if (job.city) locArr.push(job.city);
+    if (job.state) locArr.push(job.state);
+    if (job.country) locArr.push(job.country);
+
+    let locString = locArr.length > 0 ? locArr.join(', ') : job.location;
+    if (!locString) locString = 'Location not specified';
+
+    const modeMap = { ONSITE: 'In Office', HYBRID: 'Hybrid', REMOTE: 'Work From Home' };
+    const mode = job.workMode ? modeMap[job.workMode] : null;
+
+    return mode ? `${mode} | ${locString}` : locString;
   };
 
   const getJobTypeDisplay = (type) => {
     if (!type) return '';
-    const map = { FULL_TIME: 'Full Time', PART_TIME: 'Part Time', INTERNSHIP: 'Internship', CONTRACT: 'Contract' };
-    return map[type] || type.replace('_', ' ');
+    return type.replace('_', ' ');
   };
 
   const getWorkModeDisplay = (mode) => {
-    if (!mode) return '';
-    const map = { ONSITE: 'In Office', HYBRID: 'Hybrid', REMOTE: 'Work From Home' };
-    return map[mode] || mode;
+    if (mode === 'ONSITE') return 'IN OFFICE';
+    if (mode === 'HYBRID') return 'HYBRID';
+    if (mode === 'REMOTE') return 'WORK FROM HOME';
+    return mode;
   };
-
-  const getExperienceDisplay = (level) => {
-    if (!level) return '';
-    const map = { FRESHER: 'Fresher', ENTRY: 'Entry Level', MID: 'Mid Level', SENIOR: 'Senior', LEAD: 'Lead' };
-    return map[level] || level;
-  };
-
-  const getTimeAgo = (dateStr) => {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return '1 day ago';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
-    return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`;
-  };
-
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) {
-      showToast('Geolocation is not supported by your browser.', 'error');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          // Use reverse geocoding to get location name
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
-          const data = await res.json();
-          const city = data.address?.city || data.address?.town || data.address?.village || '';
-          const state = data.address?.state || '';
-          if (city) setLocation(city);
-          else if (state) setLocation(state);
-          showToast(`Location detected: ${city || state || 'Unknown'}`, 'success');
-        } catch {
-          showToast('Could not detect your location.', 'error');
-        }
-      },
-      () => showToast('Location access was denied.', 'error')
-    );
-  };
-
-  // --- Filter Sidebar Content ---
-  const filterContent = (
-    <>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)' }}>
-          <SlidersHorizontal size={18} color="var(--primary)" /> Filters
-          {activeFilterCount > 0 && (
-            <span style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', padding: '0.15rem 0.45rem', borderRadius: 'var(--radius-full)', fontWeight: 700 }}>{activeFilterCount}</span>
-          )}
-        </div>
-        <button
-          onClick={clearFilters}
-          style={{ background: 'none', border: 'none', color: 'var(--status-rejected)', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)' }}
-        >
-          Reset All
-        </button>
-      </div>
-
-      {/* Location Filters */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label className="form-label" style={{ marginBottom: '0.5rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <MapPin size={14} color="var(--text-muted)" /> Location (India)
-        </label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <select 
-            className="form-select"
-            value={state} onChange={(e) => setState(e.target.value)}
-            style={{ padding: '0.45rem 0.7rem', fontSize: '0.85rem' }}
-          >
-            <option value="">Select State</option>
-            <option value="Andhra Pradesh">Andhra Pradesh</option>
-            <option value="Assam">Assam</option>
-            <option value="Bihar">Bihar</option>
-            <option value="Delhi">Delhi</option>
-            <option value="Gujarat">Gujarat</option>
-            <option value="Haryana">Haryana</option>
-            <option value="Karnataka">Karnataka</option>
-            <option value="Kerala">Kerala</option>
-            <option value="Madhya Pradesh">Madhya Pradesh</option>
-            <option value="Maharashtra">Maharashtra</option>
-            <option value="Punjab">Punjab</option>
-            <option value="Rajasthan">Rajasthan</option>
-            <option value="Tamil Nadu">Tamil Nadu</option>
-            <option value="Telangana">Telangana</option>
-            <option value="Uttar Pradesh">Uttar Pradesh</option>
-            <option value="West Bengal">West Bengal</option>
-          </select>
-          <input 
-            type="text" className="form-input" placeholder="City (e.g. Bangalore)" 
-            value={city} onChange={(e) => setCity(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
-            style={{ padding: '0.45rem 0.7rem', fontSize: '0.85rem' }}
-          />
-          <button onClick={() => { fetchJobs(); }} className="btn btn-sm btn-secondary" style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
-            Apply Location
-          </button>
-        </div>
-      </div>
-
-      {/* Work Mode Filter */}
-      <FilterSection title="Workplace" icon={<Globe size={14} color="var(--text-muted)" />}>
-        {[
-          { label: 'Work From Home', value: 'REMOTE' },
-          { label: 'Hybrid', value: 'HYBRID' },
-          { label: 'In Office', value: 'ONSITE' }
-        ].map((item) => (
-          <FilterCheckbox key={item.value} label={item.label} checked={workModes.includes(item.value)}
-            onChange={() => toggleCheckbox(workModes, setWorkModes, item.value)} />
-        ))}
-      </FilterSection>
-
-      {/* Employment Type Filter */}
-      <FilterSection title="Employment Type" icon={<Briefcase size={14} color="var(--text-muted)" />}>
-        {[
-          { label: 'Full Time', value: 'FULL_TIME' },
-          { label: 'Part Time', value: 'PART_TIME' },
-          { label: 'Internship', value: 'INTERNSHIP' },
-          { label: 'Contract', value: 'CONTRACT' }
-        ].map((item) => (
-          <FilterCheckbox key={item.value} label={item.label} checked={jobTypes.includes(item.value)}
-            onChange={() => toggleCheckbox(jobTypes, setJobTypes, item.value)} />
-        ))}
-      </FilterSection>
-
-      {/* Experience Level Filter */}
-      <FilterSection title="Experience Level" icon={<TrendingUp size={14} color="var(--text-muted)" />}>
-        {[
-          { label: 'Fresher (0 yrs)', value: 'FRESHER' },
-          { label: 'Entry Level (0-2 yrs)', value: 'ENTRY' },
-          { label: 'Mid Level (2-5 yrs)', value: 'MID' },
-          { label: 'Senior (5+ yrs)', value: 'SENIOR' },
-          { label: 'Lead / Architect', value: 'LEAD' }
-        ].map((item) => (
-          <FilterCheckbox key={item.value} label={item.label} checked={experienceLevels.includes(item.value)}
-            onChange={() => toggleCheckbox(experienceLevels, setExperienceLevels, item.value)} />
-        ))}
-      </FilterSection>
-
-      {/* Salary Filter */}
-      <FilterSection title="Salary" icon={<Banknote size={14} color="var(--text-muted)" />}>
-        {[
-          { label: 'Any', value: '' },
-          { label: 'Salary Disclosed', value: 'true' },
-          { label: 'Salary Not Disclosed', value: 'false' }
-        ].map((item) => (
-          <label key={item.value} style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.875rem', cursor: 'pointer', color: 'var(--text-main)', padding: '0.2rem 0' }}>
-            <input type="radio" name="salaryDisclosed" checked={salaryDisclosed === item.value}
-              onChange={() => setSalaryDisclosed(item.value)}
-              style={{ width: 15, height: 15, accentColor: 'var(--primary)' }}
-            />
-            {item.label}
-          </label>
-        ))}
-      </FilterSection>
-    </>
-  );
 
   return (
-    <div style={{ maxWidth: 1340, margin: '0 auto', padding: '2rem 1.5rem 3rem' }}>
+    <div style={{ maxWidth: 1300, margin: '0 auto', padding: '2.5rem 2rem' }}>
       {/* Search Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '0.4rem', fontWeight: 800, color: 'var(--text-main)' }}>Explore Jobs in India</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Find your next role with verified details from top Indian companies.</p>
+      <div style={{ marginBottom: '2.5rem' }}>
+        <h1 style={{ fontSize: '2.25rem', marginBottom: '0.5rem', fontWeight: 800 }}>Explore Job Opportunities</h1>
+        <p style={{ color: '#64748B', fontSize: '1.1rem' }}>Find your next role at top companies with verified details.</p>
 
-        <form onSubmit={handleSearchSubmit} className="hero-search-bar" style={{ margin: '1.25rem 0 0', maxWidth: '100%' }}>
+        <form onSubmit={handleSearchSubmit} className="hero-search-bar" style={{ margin: '1.5rem 0 0', maxWidth: '100%' }}>
           <div className="search-input-group">
-            <Search size={18} color="var(--primary)" />
+            <Search size={18} color="#4F46E5" />
             <input
               type="text"
-              placeholder="Job title, skill, or company..."
+              placeholder="Search by title, role, skills, or company..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              id="search-keyword-input"
             />
           </div>
 
           <div className="search-divider" />
 
           <div className="search-input-group">
-            <MapPin size={18} color="var(--text-muted)" />
+            <MapPin size={18} color="#64748B" />
             <input
               type="text"
-              placeholder="City, State, or 'Remote'"
+              placeholder="Country, State, City, or 'Remote'..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              id="search-location-input"
             />
-            <button type="button" onClick={handleUseMyLocation} title="Jobs near me"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--text-muted)', flexShrink: 0 }}>
-              <Navigation size={16} />
-            </button>
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ borderRadius: 'var(--radius-full)', padding: '0 2rem' }}>
@@ -384,32 +187,170 @@ const JobSearchPage = () => {
 
       {/* Main Grid: Filters Sidebar + Job Results */}
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '2rem', alignItems: 'start' }}>
-        
-        {/* Filter Sidebar (Desktop) */}
-        <aside className="card" style={{ padding: '1.25rem', position: 'sticky', top: '90px', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}
-          id="filter-sidebar">
-          {filterContent}
+
+        {/* Filter Sidebar */}
+        <aside className="card" style={{ padding: '1.5rem', position: 'sticky', top: '90px', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1.1rem' }}>
+              <SlidersHorizontal size={18} color="#4F46E5" /> Filters
+            </div>
+            <button
+              onClick={clearFilters}
+              style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Reset All
+            </button>
+          </div>
+
+          {/* Location Filters */}
+          <div style={{ marginBottom: '1.75rem' }}>
+            <label className="form-label" style={{ marginBottom: '0.6rem', fontWeight: 600 }}>Location</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Country (e.g. India)"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                onBlur={fetchJobs}
+                style={{ padding: '0.5rem' }}
+              />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="State (e.g. Gujarat)"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                onBlur={fetchJobs}
+                style={{ padding: '0.5rem' }}
+              />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="City (e.g. Vadodara)"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                onBlur={fetchJobs}
+                style={{ padding: '0.5rem' }}
+              />
+            </div>
+          </div>
+
+          {/* Work Mode Filter */}
+          <div style={{ marginBottom: '1.75rem' }}>
+            <label className="form-label" style={{ marginBottom: '0.6rem', fontWeight: 600 }}>Work Mode</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[
+                { label: 'All Modes', value: '' },
+                { label: 'Work From Home', value: 'REMOTE' },
+                { label: 'Hybrid', value: 'HYBRID' },
+                { label: 'In Office', value: 'ONSITE' }
+              ].map((item) => (
+                <label key={item.value} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', cursor: 'pointer', color: '#334155' }}>
+                  <input
+                    type="radio"
+                    name="workMode"
+                    checked={workMode === item.value}
+                    onChange={() => setWorkMode(item.value)}
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Job Type Filter */}
+          <div style={{ marginBottom: '1.75rem' }}>
+            <label className="form-label" style={{ marginBottom: '0.6rem', fontWeight: 600 }}>Employment Type</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[
+                { label: 'All Types', value: '' },
+                { label: 'Full Time', value: 'FULL_TIME' },
+                { label: 'Part Time', value: 'PART_TIME' },
+                { label: 'Internship', value: 'INTERNSHIP' },
+                { label: 'Contract', value: 'CONTRACT' }
+              ].map((item) => (
+                <label key={item.value} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', cursor: 'pointer', color: '#334155' }}>
+                  <input
+                    type="radio"
+                    name="jobType"
+                    checked={jobType === item.value}
+                    onChange={() => setJobType(item.value)}
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Experience Level Filter */}
+          <div style={{ marginBottom: '1.75rem' }}>
+            <label className="form-label" style={{ marginBottom: '0.6rem', fontWeight: 600 }}>Experience Level</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[
+                { label: 'All Levels', value: '' },
+                { label: 'Fresher / Entry Level', value: 'ENTRY' },
+                { label: 'Mid Level (2-4 yrs)', value: 'MID' },
+                { label: 'Senior Level (5+ yrs)', value: 'SENIOR' },
+                { label: 'Lead / Architect', value: 'LEAD' }
+              ].map((item) => (
+                <label key={item.value} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', cursor: 'pointer', color: '#334155' }}>
+                  <input
+                    type="radio"
+                    name="experienceLevel"
+                    checked={experienceLevel === item.value}
+                    onChange={() => setExperienceLevel(item.value)}
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Salary Disclosure Filter */}
+          <div style={{ marginBottom: '1.75rem' }}>
+            <label className="form-label" style={{ marginBottom: '0.6rem', fontWeight: 600 }}>Salary</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', cursor: 'pointer', color: '#334155' }}>
+                <input
+                  type="radio"
+                  name="salaryDisclosed"
+                  checked={salaryDisclosed === ''}
+                  onChange={() => setSalaryDisclosed('')}
+                />
+                Any
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', cursor: 'pointer', color: '#334155' }}>
+                <input
+                  type="radio"
+                  name="salaryDisclosed"
+                  checked={salaryDisclosed === 'true'}
+                  onChange={() => setSalaryDisclosed('true')}
+                />
+                Salary disclosed
+              </label>
+            </div>
+          </div>
         </aside>
 
         {/* Results Column */}
         <main>
           {/* Header count and Sort */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div style={{ fontWeight: 600, color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              <span style={{ color: 'var(--text-main)', fontWeight: 800 }}>{jobs.length}</span> jobs found
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div style={{ fontWeight: 600, color: '#475569', fontSize: '1rem' }}>
+              <span style={{ color: '#0F172A', fontWeight: 800 }}>{jobs.length}</span> jobs found
             </div>
-            
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Sort by:</span>
+              <span style={{ fontSize: '0.9rem', color: '#64748B', fontWeight: 500 }}>Sort by:</span>
               <select
                 className="form-select"
-                style={{ padding: '0.38rem 2rem 0.38rem 0.7rem', fontSize: '0.85rem', width: 'auto', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}
+                style={{ padding: '0.4rem 2rem 0.4rem 0.8rem', fontSize: '0.9rem', width: 'auto', border: '1px solid #E2E8F0', borderRadius: 'var(--radius-md)' }}
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                id="sort-select"
               >
-                <option value="newest">Most Recent</option>
-                <option value="deadline">Deadline (Soonest)</option>
+                <option value="newest">Newest</option>
+                <option value="deadline">Deadline</option>
                 <option value="salary_desc">Salary: High to Low</option>
                 <option value="salary_asc">Salary: Low to High</option>
               </select>
@@ -417,106 +358,101 @@ const JobSearchPage = () => {
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
-              <div className="spinner" style={{ margin: '0 auto 1rem', width: 32, height: 32, border: '3px solid var(--border-light)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            <div style={{ textAlign: 'center', padding: '4rem 0', color: '#64748B' }}>
+              <div className="spinner" style={{ margin: '0 auto 1rem', width: 30, height: 30, border: '3px solid #E2E8F0', borderTopColor: '#4F46E5', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
               Loading job postings...
             </div>
           ) : jobs.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-              <Briefcase size={48} color="var(--border-light)" style={{ margin: '0 auto 1.25rem' }} />
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', fontWeight: 700 }}>No matching jobs found</h3>
-              <p style={{ color: 'var(--text-muted)', maxWidth: 420, margin: '0 auto 1.5rem', fontSize: '0.925rem' }}>
-                Try adjusting your search criteria or clearing some filters to see more results.
+            <div className="card" style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+              <Briefcase size={54} color="#CBD5E1" style={{ margin: '0 auto 1.5rem' }} />
+              <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', fontWeight: 700, color: '#1E293B' }}>No matching jobs found</h3>
+              <p style={{ color: '#64748B', maxWidth: 420, margin: '0 auto 2rem', fontSize: '0.95rem' }}>
+                We couldn't find any job openings matching your search criteria. Try adjusting your keyword or clearing some filters to see more results.
               </p>
               <button onClick={clearFilters} className="btn btn-secondary">
                 Clear All Filters
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {jobs.map((job) => (
-                <div key={job.id} className="card card-hover" style={{ padding: '1.35rem 1.5rem', border: '1px solid var(--border-light)', position: 'relative' }}>
-                  <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
-                    
+                <div key={job.id} className="card card-hover" style={{ padding: '1.5rem', border: '1px solid #E2E8F0', transition: 'all 0.2s ease', position: 'relative' }}>
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+
                     {/* Left details */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {/* Company row */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                         <div style={{
-                          width: 44, height: 44, borderRadius: 'var(--radius-md)',
-                          background: 'var(--bg-main)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          overflow: 'hidden', border: '1px solid var(--border-light)', flexShrink: 0
+                          width: 50,
+                          height: 50,
+                          borderRadius: 'var(--radius-md)',
+                          background: '#F8FAFC',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          border: '1px solid #E2E8F0',
+                          flexShrink: 0
                         }}>
                           {job.companyLogoUrl ? (
-                            <img src={job.companyLogoUrl} alt={job.companyName} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '3px' }} />
+                            <img src={job.companyLogoUrl} alt={job.companyName} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
                           ) : (
-                            <Building2 size={22} color="var(--text-light)" />
+                            <Building2 size={24} color="#94A3B8" />
                           )}
                         </div>
-                        <div style={{ minWidth: 0 }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-main)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.companyName}</span>
+                        <div>
+                          <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#334155', display: 'block' }}>{job.companyName}</span>
                           {job.sourceName && (
-                            <span style={{ fontSize: '0.72rem', color: 'var(--text-light)' }}>via {job.sourceName}</span>
+                            <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Via {job.sourceName}</span>
                           )}
                         </div>
                       </div>
 
-                      {/* Job Title */}
-                      <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', fontWeight: 800, lineHeight: 1.3 }}>
-                        <Link to={`/jobs/${job.id}`} style={{ color: 'var(--text-main)', textDecoration: 'none' }} className="hover-underline">
+                      <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', fontWeight: 800, lineHeight: 1.3 }}>
+                        <Link to={`/jobs/${job.id}`} style={{ color: '#0F172A', textDecoration: 'none' }} className="hover-underline">
                           {job.title}
                         </Link>
                       </h2>
 
-                      {/* Badges row */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                        <span className="badge" style={{ fontSize: '0.7rem', background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 700 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                        <span className="badge" style={{ fontSize: '0.75rem', background: '#EEF2FF', color: '#4F46E5', fontWeight: 600 }}>
                           {getJobTypeDisplay(job.jobType)}
                         </span>
                         {job.workMode && (
-                          <span className="badge" style={{ fontSize: '0.7rem', background: job.workMode === 'REMOTE' ? '#F0FDF4' : 'var(--bg-main)', color: job.workMode === 'REMOTE' ? '#16A34A' : 'var(--text-muted)', border: `1px solid ${job.workMode === 'REMOTE' ? '#DCFCE7' : 'var(--border-light)'}`, fontWeight: 600 }}>
-                            {job.workModeDisplay || getWorkModeDisplay(job.workMode)}
+                          <span className="badge" style={{ fontSize: '0.75rem', background: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', fontWeight: 600 }}>
+                            {getWorkModeDisplay(job.workMode)}
                           </span>
                         )}
                         {job.experienceLevel && (
-                          <span className="badge" style={{ fontSize: '0.7rem', background: '#FFF7ED', color: '#C2410C', border: '1px solid #FED7AA', fontWeight: 600 }}>
-                            {getExperienceDisplay(job.experienceLevel)}
+                          <span className="badge" style={{ fontSize: '0.75rem', background: '#F0FDF4', color: '#16A34A', border: '1px solid #DCFCE7', fontWeight: 600 }}>
+                            {job.experienceLevel}
                           </span>
                         )}
                       </div>
 
-                      {/* Info row */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          {job.workMode === 'REMOTE' ? <Globe size={15} color="var(--text-light)" /> : <MapPin size={15} color="var(--text-light)" />}
-                          {formatLocation(job)}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.6rem', fontSize: '0.9rem', color: '#475569', marginBottom: '1.25rem' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <MapPin size={16} color="#94A3B8" /> {formatLocation(job)}
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: job.salaryDisclosed ? 600 : 400, color: job.salaryDisclosed ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                          <Banknote size={15} color={job.salaryDisclosed ? '#059669' : 'var(--text-light)'} />
-                          {formatSalary(job)}
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: job.salaryDisclosed ? 600 : 400, color: job.salaryDisclosed ? '#0F172A' : '#64748B' }}>
+                          <DollarSign size={16} color={job.salaryDisclosed ? '#10B981' : '#94A3B8'} /> {formatSalary(job)}
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.8rem' }}>
-                          <Clock size={14} color="var(--text-light)" />
-                          {getTimeAgo(job.createdAt) ? `Posted ${getTimeAgo(job.createdAt)}` : 'Recently posted'}
-                          {job.deadline && (
-                            <span style={{ marginLeft: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <Calendar size={13} color="var(--text-light)" />
-                              <span>Apply by {job.deadline}</span>
-                            </span>
-                          )}
-                        </span>
+                        {job.deadline && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Clock size={16} color="#94A3B8" /> Apply by {job.deadline}
+                          </span>
+                        )}
                       </div>
 
-                      {/* Skills */}
                       {job.skills && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                           {job.skills.split(',').slice(0, 5).map((skill, idx) => (
-                            <span key={idx} style={{ padding: '0.18rem 0.55rem', background: 'var(--bg-main)', color: 'var(--text-muted)', borderRadius: 'var(--radius-full)', fontSize: '0.72rem', fontWeight: 500, border: '1px solid var(--border-subtle)' }}>
+                            <span key={idx} style={{ padding: '0.2rem 0.6rem', background: '#F1F5F9', color: '#475569', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 500 }}>
                               {skill.trim()}
                             </span>
                           ))}
                           {job.skills.split(',').length > 5 && (
-                            <span style={{ padding: '0.18rem 0.55rem', background: 'var(--bg-main)', color: 'var(--text-light)', borderRadius: 'var(--radius-full)', fontSize: '0.72rem', fontWeight: 500 }}>
+                            <span style={{ padding: '0.2rem 0.6rem', background: '#F1F5F9', color: '#94A3B8', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 500 }}>
                               +{job.skills.split(',').length - 5}
                             </span>
                           )}
@@ -525,27 +461,30 @@ const JobSearchPage = () => {
                     </div>
 
                     {/* Right action column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', alignSelf: 'stretch', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', alignSelf: 'stretch' }}>
                       <button
                         onClick={() => handleToggleSave(job.id, job.savedByCurrentUser)}
                         style={{
-                          background: 'transparent', border: 'none', padding: '0.4rem', cursor: 'pointer',
-                          color: job.savedByCurrentUser ? 'var(--primary)' : 'var(--text-light)',
+                          background: 'transparent',
+                          border: 'none',
+                          padding: '0.5rem',
+                          cursor: 'pointer',
+                          color: job.savedByCurrentUser ? '#4F46E5' : '#94A3B8',
                           transition: 'color 0.2s'
                         }}
                         title={job.savedByCurrentUser ? 'Remove from saved' : 'Save job'}
                       >
-                        <Bookmark size={20} fill={job.savedByCurrentUser ? 'var(--primary)' : 'none'} />
+                        <Bookmark size={22} fill={job.savedByCurrentUser ? '#4F46E5' : 'none'} />
                       </button>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-end', marginTop: 'auto' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
                         {job.appliedByCurrentUser && (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem', color: 'var(--status-selected)', fontWeight: 600 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: '#10B981', fontWeight: 600 }}>
                             <CheckCircle size={14} /> Applied
                           </span>
                         )}
-                        <Link to={`/jobs/${job.id}`} className="btn btn-primary" style={{ padding: '0.45rem 1.1rem', fontSize: '0.85rem', borderRadius: 'var(--radius-full)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                          View & Apply <ChevronRight size={15} />
+                        <Link to={`/jobs/${job.id}`} className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', borderRadius: 'var(--radius-full)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          View & Apply <ChevronRight size={16} />
                         </Link>
                       </div>
                     </div>
@@ -557,7 +496,6 @@ const JobSearchPage = () => {
           )}
         </main>
       </div>
-
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -565,42 +503,12 @@ const JobSearchPage = () => {
         }
         .hover-underline:hover {
           text-decoration: underline;
-          text-decoration-color: var(--primary);
-          text-underline-offset: 3px;
-        }
-        @media (max-width: 768px) {
-          #filter-sidebar {
-            display: none;
-          }
+          text-decoration-color: #4F46E5;
+          text-underline-offset: 4px;
         }
       `}</style>
     </div>
   );
 };
-
-// ---- Reusable Filter Components ----
-
-const FilterSection = ({ title, icon, children }) => (
-  <div style={{ marginBottom: '1.5rem' }}>
-    <label className="form-label" style={{ marginBottom: '0.5rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-      {icon} {title}
-    </label>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-      {children}
-    </div>
-  </div>
-);
-
-const FilterCheckbox = ({ label, checked, onChange }) => (
-  <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.875rem', cursor: 'pointer', color: 'var(--text-main)', padding: '0.2rem 0' }}>
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      style={{ width: 15, height: 15, accentColor: 'var(--primary)', borderRadius: '3px' }}
-    />
-    {label}
-  </label>
-);
 
 export default JobSearchPage;

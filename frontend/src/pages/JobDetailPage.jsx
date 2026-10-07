@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  Building2, 
-  MapPin, 
-  DollarSign, 
-  Calendar, 
-  Clock, 
-  Bookmark, 
-  Share2, 
-  CheckCircle, 
-  FileText, 
-  Upload, 
+import {
+  Building2,
+  MapPin,
+  DollarSign,
+  Calendar,
+  Clock,
+  Bookmark,
+  Share2,
+  CheckCircle,
+  FileText,
+  Upload,
   ArrowLeft,
   ShieldCheck,
+  AlertCircle,
   ExternalLink,
-  X,
-  Globe,
-  Briefcase,
-  Users
+  X
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -32,7 +30,7 @@ const JobDetailPage = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applyModalOpen, setApplyModalOpen] = useState(false);
-  
+
   // Application form state
   const [coverLetter, setCoverLetter] = useState('');
   const [candidateProfile, setCandidateProfile] = useState(null);
@@ -146,54 +144,41 @@ const JobDetailPage = () => {
   };
 
   const formatSalary = (job) => {
-    if (job.formattedSalary) return job.formattedSalary;
     if (job.salaryDisclosed === false) return 'Salary not disclosed';
     if (job.salaryText) return job.salaryText;
+    const curr = job.salaryCurrency || '$';
+    if (job.salaryMin && job.salaryMax) return `${curr}${job.salaryMin.toLocaleString()} - ${curr}${job.salaryMax.toLocaleString()}`;
+    if (job.salaryMin) return `From ${curr}${job.salaryMin.toLocaleString()}`;
+    if (job.salaryMax) return `Up to ${curr}${job.salaryMax.toLocaleString()}`;
     return 'Salary not disclosed';
   };
 
   const formatLocation = (job) => {
-    if (job.formattedLocation) return job.formattedLocation;
-    if (job.workMode === 'REMOTE') return 'Work From Home / India';
-    const parts = [job.city, job.state, 'India'].filter(Boolean);
-    return parts.length > 0 ? parts.join(', ') : (job.location || 'India');
+    if (job.workMode === 'REMOTE') return 'Work From Home';
+    const locArr = [];
+    if (job.city) locArr.push(job.city);
+    if (job.state) locArr.push(job.state);
+    if (job.country) locArr.push(job.country);
+
+    let locString = locArr.length > 0 ? locArr.join(', ') : job.location;
+    if (!locString) locString = 'Location not specified';
+
+    const modeMap = { ONSITE: 'In Office', HYBRID: 'Hybrid', REMOTE: 'Work From Home' };
+    const mode = job.workMode ? modeMap[job.workMode] : null;
+
+    return mode ? `${mode} | ${locString}` : locString;
   };
 
   const getWorkModeDisplay = (mode) => {
-    if (!mode) return '';
-    const map = { ONSITE: 'In Office', HYBRID: 'Hybrid', REMOTE: 'Work From Home' };
-    return map[mode] || mode;
-  };
-  
-  const getJobTypeDisplay = (type) => {
-    if (!type) return '';
-    const map = { FULL_TIME: 'Full Time', PART_TIME: 'Part Time', INTERNSHIP: 'Internship', CONTRACT: 'Contract' };
-    return map[type] || type.replace('_', ' ');
-  };
-
-  const getExperienceDisplay = (level) => {
-    if (!level) return '';
-    const map = { FRESHER: 'Fresher', ENTRY: 'Entry Level', MID: 'Mid Level', SENIOR: 'Senior', LEAD: 'Lead' };
-    return map[level] || level;
-  };
-
-  const getTimeAgo = (dateStr) => {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return '1 day ago';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return `${Math.floor(diffDays / 30)} months ago`;
+    if (mode === 'ONSITE') return 'IN OFFICE';
+    if (mode === 'HYBRID') return 'HYBRID';
+    if (mode === 'REMOTE') return 'WORK FROM HOME';
+    return mode;
   };
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '5rem 0', color: 'var(--text-muted)' }}>
-        <div className="spinner" style={{ margin: '0 auto 1rem', width: 36, height: 36, border: '3px solid var(--border-light)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ textAlign: 'center', padding: '5rem 0', color: '#64748B' }}>
         Loading job posting details...
       </div>
     );
@@ -202,119 +187,104 @@ const JobDetailPage = () => {
   if (!job) return null;
 
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '2rem 1.5rem 3rem' }}>
-      
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2.5rem 2rem' }}>
+
       {/* Back button */}
-      <Link to="/jobs" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem', fontWeight: 600, transition: 'color 0.2s' }} className="hover-text-primary">
+      <Link to="/jobs" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: 600 }}>
         <ArrowLeft size={16} /> Back to Search
       </Link>
 
       {/* Top Job Hero Card */}
-      <div className="card" style={{ padding: '2rem', marginBottom: '2rem', border: '1px solid var(--border-light)' }}>
+      <div className="card" style={{ padding: '2.25rem', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '2rem', flexWrap: 'wrap' }}>
-          
-          <div style={{ display: 'flex', gap: '1.25rem', flex: 1, minWidth: '280px' }}>
+
+          <div style={{ display: 'flex', gap: '1.5rem', flex: 1, minWidth: '280px' }}>
             <div style={{
-              width: 68,
-              height: 68,
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-main)',
+              width: 72,
+              height: 72,
+              borderRadius: 'var(--radius-lg)',
+              background: '#F1F5F9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              border: '1px solid var(--border-light)',
+              border: '1px solid #E2E8F0',
               flexShrink: 0
             }}>
               {job.companyLogoUrl ? (
-                <img src={job.companyLogoUrl} alt={job.companyName} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
+                <img src={job.companyLogoUrl} alt={job.companyName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <Building2 size={32} color="var(--text-light)" />
+                <Building2 size={36} color="#64748B" />
               )}
             </div>
 
-            <div style={{ minWidth: 0 }}>
+            <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
-                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary)' }}>{job.companyName}</span>
+                <span style={{ fontSize: '1.05rem', fontWeight: 600, color: '#4F46E5' }}>{job.companyName}</span>
                 {job.sourceName && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-light)', borderLeft: '1px solid var(--border-light)', paddingLeft: '0.6rem' }}>via {job.sourceName}</span>
+                  <span style={{ fontSize: '0.85rem', color: '#64748B' }}>via {job.sourceName}</span>
                 )}
-                <span className="badge badge-active" style={{ marginLeft: '0.25rem', padding: '0.15rem 0.5rem', fontSize: '0.65rem' }}>{job.status}</span>
+                <span className="badge badge-active" style={{ marginLeft: '0.5rem' }}>{job.status}</span>
+                <span className="badge badge-applied">{job.jobType.replace('_', ' ')}</span>
+                {job.workMode && (
+                  <span className="badge" style={{ background: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', fontWeight: 600 }}>
+                    {getWorkModeDisplay(job.workMode)}
+                  </span>
+                )}
+                <span className="badge badge-tag">{job.experienceLevel}</span>
               </div>
 
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-main)', lineHeight: 1.25 }}>
+              <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.75rem', color: '#0F172A' }}>
                 {job.title}
               </h1>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
-                <span className="badge" style={{ fontSize: '0.75rem', background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 700 }}>
-                  {getJobTypeDisplay(job.jobType)}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.9rem', color: '#64748B', flexWrap: 'wrap' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <MapPin size={16} /> {formatLocation(job)}
                 </span>
-                {job.workMode && (
-                  <span className="badge" style={{ fontSize: '0.75rem', background: job.workMode === 'REMOTE' ? '#F0FDF4' : 'var(--bg-main)', color: job.workMode === 'REMOTE' ? '#16A34A' : 'var(--text-muted)', border: `1px solid ${job.workMode === 'REMOTE' ? '#DCFCE7' : 'var(--border-light)'}`, fontWeight: 600 }}>
-                    {job.workModeDisplay || getWorkModeDisplay(job.workMode)}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: job.salaryDisclosed ? 700 : 500, color: job.salaryDisclosed ? '#0F172A' : '#64748B' }}>
+                  <DollarSign size={16} color={job.salaryDisclosed ? '#10B981' : '#64748B'} /> {formatSalary(job)}
+                </span>
+                {job.deadline && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Clock size={16} /> Deadline: {job.deadline}
                   </span>
                 )}
-                <span className="badge" style={{ fontSize: '0.75rem', background: '#FFF7ED', color: '#C2410C', border: '1px solid #FED7AA', fontWeight: 600 }}>
-                  {getExperienceDisplay(job.experienceLevel)}
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', fontSize: '0.9rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  {job.workMode === 'REMOTE' ? <Globe size={16} color="var(--text-light)" /> : <MapPin size={16} color="var(--text-light)" />}
-                  {formatLocation(job)}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: job.salaryDisclosed ? 600 : 400, color: job.salaryDisclosed ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                  <DollarSign size={16} color={job.salaryDisclosed ? '#059669' : 'var(--text-light)'} /> 
-                  {formatSalary(job)}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <Clock size={15} color="var(--text-light)" /> 
-                  Posted {getTimeAgo(job.createdAt) || 'Recently'}
-                </span>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               onClick={handleToggleSave}
               className="btn btn-secondary"
               style={{
-                color: job.savedByCurrentUser ? 'var(--primary)' : 'var(--text-main)',
-                borderColor: job.savedByCurrentUser ? 'var(--primary)' : 'var(--border-light)',
-                background: job.savedByCurrentUser ? 'var(--primary-light)' : '#FFFFFF',
-                padding: '0.65rem 1rem'
+                color: job.savedByCurrentUser ? '#4F46E5' : '#64748B',
+                borderColor: job.savedByCurrentUser ? '#C7D2FE' : '#E2E8F0',
+                background: job.savedByCurrentUser ? '#EEF2FF' : '#FFFFFF'
               }}
               title={job.savedByCurrentUser ? 'Remove bookmark' : 'Bookmark job'}
             >
-              <Bookmark size={18} fill={job.savedByCurrentUser ? 'var(--primary)' : 'none'} />
+              <Bookmark size={18} fill={job.savedByCurrentUser ? '#4F46E5' : 'none'} />
               {job.savedByCurrentUser ? 'Saved' : 'Save'}
-            </button>
-            <button className="btn btn-secondary" style={{ padding: '0.65rem 1rem' }} title="Share">
-              <Share2 size={18} />
             </button>
 
             {job.appliedByCurrentUser ? (
-              <div className="badge badge-selected" style={{ padding: '0.7rem 1.25rem', fontSize: '0.95rem', borderRadius: 'var(--radius-md)' }}>
+              <div className="badge badge-selected" style={{ padding: '0.75rem 1.25rem', fontSize: '0.9rem', borderRadius: 'var(--radius-md)' }}>
                 <CheckCircle size={18} style={{ marginRight: 6 }} /> Applied
               </div>
             ) : job.sourceUrl ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
                 <a
                   href={job.sourceUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn btn-primary"
-                  style={{ padding: '0.65rem 1.5rem', fontSize: '0.95rem' }}
+                  className="btn btn-primary btn-lg"
                 >
-                  Apply on Source <ExternalLink size={16} style={{ marginLeft: 6 }} />
+                  Apply on Company Website <ExternalLink size={18} style={{ marginLeft: 6 }} />
                 </a>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>
-                  Applies on {job.sourceName || job.companyName}
-                </span>
+                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Application handled by {job.companyName}</span>
               </div>
             ) : (
               <button
@@ -328,8 +298,7 @@ const JobDetailPage = () => {
                     setApplyModalOpen(true);
                   }
                 }}
-                className="btn btn-primary"
-                style={{ padding: '0.65rem 1.5rem', fontSize: '0.95rem' }}
+                className="btn btn-primary btn-lg"
               >
                 Apply Now
               </button>
@@ -341,114 +310,99 @@ const JobDetailPage = () => {
 
       {/* Main Content Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem', alignItems: 'start' }}>
-        
+
         {/* Left Column: Job Details */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          <div className="card" style={{ padding: '2rem' }}>
-            {/* Overview */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileText size={20} color="var(--primary)" /> About the Role
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+          {/* Overview */}
+          <div className="card">
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+              About the Role
+            </h3>
+            <p style={{ lineHeight: 1.7, color: '#334155', whiteSpace: 'pre-line', fontSize: '0.975rem' }}>
+              {job.description}
+            </p>
+          </div>
+
+          {/* Key Responsibilities */}
+          {job.responsibilities && (
+            <div className="card">
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+                Key Responsibilities
               </h3>
-              <p style={{ lineHeight: 1.7, color: 'var(--text-main)', whiteSpace: 'pre-line', fontSize: '0.95rem' }}>
-                {job.description}
+              <p style={{ lineHeight: 1.7, color: '#334155', whiteSpace: 'pre-line', fontSize: '0.975rem' }}>
+                {job.responsibilities}
               </p>
             </div>
+          )}
 
-            {/* Key Responsibilities */}
-            {job.responsibilities && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Briefcase size={20} color="var(--primary)" /> Key Responsibilities
-                </h3>
-                <div style={{ lineHeight: 1.7, color: 'var(--text-main)', whiteSpace: 'pre-line', fontSize: '0.95rem', paddingLeft: '1rem', borderLeft: '3px solid var(--border-light)' }}>
-                  {job.responsibilities}
-                </div>
-              </div>
-            )}
+          {/* Requirements */}
+          {job.requirements && (
+            <div className="card">
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+                Qualifications & Requirements
+              </h3>
+              <p style={{ lineHeight: 1.7, color: '#334155', whiteSpace: 'pre-line', fontSize: '0.975rem' }}>
+                {job.requirements}
+              </p>
+            </div>
+          )}
 
-            {/* Requirements */}
-            {job.requirements && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle size={20} color="var(--primary)" /> Qualifications & Requirements
-                </h3>
-                <div style={{ lineHeight: 1.7, color: 'var(--text-main)', whiteSpace: 'pre-line', fontSize: '0.95rem', paddingLeft: '1rem', borderLeft: '3px solid var(--border-light)' }}>
-                  {job.requirements}
-                </div>
+          {/* Required Skills */}
+          {job.skills && (
+            <div className="card">
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+                Required Technologies & Skills
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+                {job.skills.split(',').map((skill, idx) => (
+                  <span key={idx} className="badge badge-tag" style={{ padding: '0.4rem 0.8rem', fontSize: '0.875rem' }}>
+                    {skill.trim()}
+                  </span>
+                ))}
               </div>
-            )}
-
-            {/* Required Skills */}
-            {job.skills && (
-              <div>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)' }}>
-                  Technologies & Skills
-                </h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {job.skills.split(',').map((skill, idx) => (
-                    <span key={idx} className="badge" style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)' }}>
-                      {skill.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
         </div>
 
-        {/* Right Column: Company & Metadata */}
+        {/* Right Column: Company & Recruiter Profile */}
         <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          {/* Company Profile */}
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem', color: 'var(--text-main)' }}>
+
+          <div className="card">
+            <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem' }}>
               About the Company
             </h3>
-            
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <div style={{
-                width: 48, height: 48, borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-main)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden', border: '1px solid var(--border-light)', flexShrink: 0
+                width: 48,
+                height: 48,
+                borderRadius: 'var(--radius-md)',
+                background: '#F1F5F9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                border: '1px solid #E2E8F0'
               }}>
                 {job.companyLogoUrl ? (
-                  <img src={job.companyLogoUrl} alt={job.companyName} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '2px' }} />
+                  <img src={job.companyLogoUrl} alt={job.companyName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <Building2 size={24} color="var(--text-light)" />
+                  <Building2 size={24} color="#64748B" />
                 )}
               </div>
               <div>
-                <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '1rem' }}>{job.companyName}</div>
-                <div style={{ fontSize: '0.75rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600, marginTop: 2 }}>
+                <div style={{ fontWeight: 700, color: '#0F172A' }}>{job.companyName}</div>
+                <div style={{ fontSize: '0.8rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: 3 }}>
                   <ShieldCheck size={14} /> Verified Employer
                 </div>
               </div>
             </div>
 
-            {/* Real company data instead of placeholder */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              {job.companyIndustry && (
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <Building2 size={15} style={{ marginTop: 2, flexShrink: 0 }} />
-                  <span>{job.companyIndustry}</span>
-                </div>
-              )}
-              {job.companyHeadquarters && (
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <MapPin size={15} style={{ marginTop: 2, flexShrink: 0 }} />
-                  <span>{job.companyHeadquarters}</span>
-                </div>
-              )}
-              {job.companySize && (
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <Users size={15} style={{ marginTop: 2, flexShrink: 0 }} />
-                  <span>{job.companySize} employees</span>
-                </div>
-              )}
-            </div>
+            <p style={{ fontSize: '0.875rem', color: '#64748B', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+              We build scalable modern engineering solutions with collaborative teams and exceptional technology stacks.
+            </p>
 
             {job.companyWebsite && (
               <a
@@ -456,7 +410,7 @@ const JobDetailPage = () => {
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-secondary btn-sm"
-                style={{ width: '100%', gap: '0.4rem', justifyContent: 'center' }}
+                style={{ width: '100%', gap: '0.4rem' }}
               >
                 Visit Website <ExternalLink size={14} />
               </a>
@@ -464,59 +418,45 @@ const JobDetailPage = () => {
           </div>
 
           {/* Job Overview Metadata */}
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem', color: 'var(--text-main)' }}>
+          <div className="card">
+            <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem' }}>
               Job Summary
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Location:</span>
-                <span style={{ fontWeight: 600, textAlign: 'right', maxWidth: '65%', color: 'var(--text-main)' }}>{formatLocation(job)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', fontSize: '0.875rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748B' }}>Employment Type:</span>
+                <span style={{ fontWeight: 600 }}>{job.jobType.replace('_', ' ')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Work Mode:</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{job.workModeDisplay || getWorkModeDisplay(job.workMode)}</span>
+                <span style={{ color: '#64748B' }}>Experience Level:</span>
+                <span style={{ fontWeight: 600 }}>{job.experienceLevel}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Job Type:</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{getJobTypeDisplay(job.jobType)}</span>
+                <span style={{ color: '#64748B' }}>Location:</span>
+                <span style={{ fontWeight: 600, textAlign: 'right', maxWidth: '60%' }}>{formatLocation(job)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Experience:</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{getExperienceDisplay(job.experienceLevel)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Salary:</span>
-                <span style={{ fontWeight: 600, color: job.salaryDisclosed ? '#059669' : 'var(--text-muted)' }}>{formatSalary(job)}</span>
-              </div>
-              
-              {(job.sourceName || job.sourceType) && (
-                <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border-light)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {job.sourceName && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Source:</span>
-                      <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{job.sourceName}</span>
-                    </div>
-                  )}
-                  {job.lastVerifiedAt && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Verified On:</span>
-                      <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{new Date(job.lastVerifiedAt).toLocaleDateString()}</span>
-                    </div>
-                  )}
+              {job.workMode && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748B' }}>Work Mode:</span>
+                  <span style={{ fontWeight: 600 }}>{getWorkModeDisplay(job.workMode)}</span>
                 </div>
               )}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Total Applicants:</span>
-                <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{job.applicantCount}</span>
-              </div>
-              {job.deadline && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--status-rejected-bg)', padding: '0.5rem', borderRadius: 'var(--radius-sm)', marginTop: '0.25rem' }}>
-                  <span style={{ color: 'var(--status-rejected)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={14}/> Deadline:</span>
-                  <span style={{ fontWeight: 700, color: 'var(--status-rejected)' }}>{new Date(job.deadline).toLocaleDateString()}</span>
+              {job.sourceName && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748B' }}>Source:</span>
+                  <span style={{ fontWeight: 600 }}>{job.sourceName}</span>
                 </div>
               )}
+              {job.lastVerifiedAt && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748B' }}>Last Verified:</span>
+                  <span style={{ fontWeight: 600 }}>{new Date(job.lastVerifiedAt).toLocaleDateString()}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
+                <span style={{ color: '#64748B' }}>Total Applicants:</span>
+                <span style={{ fontWeight: 600 }}>{job.applicantCount} candidates</span>
+              </div>
             </div>
           </div>
 
@@ -524,55 +464,67 @@ const JobDetailPage = () => {
 
       </div>
 
-      {/* Internal Application Modal */}
+      {/* Application Modal */}
       {applyModalOpen && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(13, 31, 53, 0.4)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div className="modal-content" style={{ background: '#fff', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '600px', boxShadow: 'var(--shadow-xl)', overflow: 'hidden' }}>
-            <div className="modal-header" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
               <div>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)' }}>Apply for Position</h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{job.title} at <span style={{ fontWeight: 600 }}>{job.companyName}</span></p>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Apply for Position</h3>
+                <p style={{ fontSize: '0.875rem', color: '#64748B' }}>{job.title} at {job.companyName}</p>
               </div>
-              <button onClick={() => setApplyModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--text-light)' }} className="hover-text-primary">
+              <button onClick={() => setApplyModalOpen(false)} className="modal-close">
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleApplySubmit} style={{ padding: '1.5rem' }}>
+            <form onSubmit={handleApplySubmit}>
               {/* Candidate Resume Section */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <label className="form-label" style={{ marginBottom: '0.5rem' }}>Resume Document (PDF) *</label>
-                
+                <label className="form-label" style={{ marginBottom: '0.5rem' }}>Resume Document (PDF)</label>
+
                 {candidateProfile?.resumeFileName ? (
-                  <div style={{ padding: '1rem', background: 'var(--bg-main)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ padding: '0.5rem', background: '#fff', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                        <FileText size={20} color="var(--primary)" />
-                      </div>
+                  <div style={{
+                    padding: '1rem',
+                    background: '#F8FAFC',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid #E2E8F0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.75rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <FileText size={20} color="#4F46E5" />
                       <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0F172A' }}>
                           {candidateProfile.resumeOriginalName || candidateProfile.resumeFileName}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 3, marginTop: 2 }}>
-                          <CheckCircle size={12} /> Attached from profile
-                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#10B981' }}>Attached from your candidate profile</div>
                       </div>
                     </div>
-                    <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', padding: '0.4rem 0.75rem' }}>
+                    <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
                       Change PDF
                       <input type="file" accept=".pdf" onChange={handleResumeFileUpload} style={{ display: 'none' }} />
                     </label>
                   </div>
                 ) : (
-                  <div style={{ padding: '1.75rem 1.5rem', border: '2px dashed var(--border-light)', borderRadius: 'var(--radius-md)', textAlign: 'center', background: 'var(--bg-main)' }}>
-                    <Upload size={28} color="var(--text-light)" style={{ margin: '0 auto 0.75rem' }} />
-                    <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+                  <div style={{
+                    padding: '1.5rem',
+                    border: '2px dashed #CBD5E1',
+                    borderRadius: 'var(--radius-md)',
+                    textAlign: 'center',
+                    background: '#F8FAFC',
+                    marginBottom: '0.75rem'
+                  }}>
+                    <Upload size={28} color="#64748B" style={{ margin: '0 auto 0.5rem' }} />
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0F172A', marginBottom: '0.25rem' }}>
                       Upload your PDF resume
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '1rem' }}>
                       Supports PDF files up to 10MB
                     </div>
-                    <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', padding: '0.5rem 1rem' }}>
+                    <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer' }}>
                       {uploadingResume ? 'Uploading...' : 'Browse Computer'}
                       <input type="file" accept=".pdf" onChange={handleResumeFileUpload} style={{ display: 'none' }} />
                     </label>
@@ -581,22 +533,30 @@ const JobDetailPage = () => {
               </div>
 
               {/* Cover Letter */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Cover Letter / Note to Recruiter (Optional)</label>
+              <div className="form-group">
+                <label className="form-label">Cover Letter / Note to Recruiter</label>
                 <textarea
                   className="form-textarea"
                   placeholder="Explain why you are an ideal fit for this engineering position, highlighting your key project achievements..."
-                  rows={4}
+                  rows={5}
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-light)' }}>
-                <button type="button" onClick={() => setApplyModalOpen(false)} className="btn btn-secondary">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setApplyModalOpen(false)}
+                  className="btn btn-secondary"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting || uploadingResume || !candidateProfile?.resumeFileName} className="btn btn-primary">
+                <button
+                  type="submit"
+                  disabled={submitting || uploadingResume}
+                  className="btn btn-primary"
+                >
                   {submitting ? 'Submitting Application...' : 'Confirm & Apply'}
                 </button>
               </div>
@@ -605,10 +565,6 @@ const JobDetailPage = () => {
         </div>
       )}
 
-      <style>{`
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .hover-text-primary:hover { color: var(--primary) !important; }
-      `}</style>
     </div>
   );
 };
